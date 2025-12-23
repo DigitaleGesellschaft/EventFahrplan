@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Winterkongress 2026 Schedule</string>
+    <string name="app_hardcoded_subtitle">
+        Winterkongress der Digitalen Gesellschaft vom 20. und 21. Februar 2026
+    </string>
+    <string name="copyright_logo">
+        Logo von der Digitale Gesellschaft
+    </string>
+    <string name="about_logo_content_description">
+        Digitale Gesellschaft Logo
+    </string>
+</resources>

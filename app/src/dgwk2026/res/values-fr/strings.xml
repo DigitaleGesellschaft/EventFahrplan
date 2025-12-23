@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Programme du Congress d\'hiver 2026</string>
+    <string name="app_hardcoded_subtitle">
+        Congress d\'hiver de la Société Numérique le 20 et 21 février 2026
+    </string>
+    <string name="copyright_logo">
+        Logo par Société Numérique
+    </string>
+    <string name="about_logo_content_description">
+        Société Numérique logo
+    </string>
+</resources>
