@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<map linked="true">
+    <entry key="Art &amp; Culture">art_culture</entry>
+    <entry key="Netzwerke, Security, Hard- &amp; Software">netzwerke_security_hard_software</entry>
+    <entry key="Digitale Selbstverteidigung">digitale_selbstverteidigung</entry>
+    <entry key="Ethik, Wissenschaft, Kultur &amp; Gesellschaft">ethik_wissenschaft_kultur_gesellschaft</entry>
+    <entry key="Recht &amp; Politik">recht_politik</entry>
+    <entry key="Andere">andere</entry>
+    <entry key="">other</entry>
+</map>

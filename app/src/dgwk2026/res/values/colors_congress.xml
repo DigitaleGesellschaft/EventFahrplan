@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Default state -->
+    <color name="track_background_default">#808080</color>
+    <color name="track_background_default_netzwerke_security_hard_software">#af0c0c</color>
+    <color name="track_background_default_digitale_selbstverteidigung">#145e9a</color>
+    <color name="track_background_default_ethik_wissenschaft_kultur_gesellschaft">#119633</color>
+    <color name="track_background_default_recht_politik">#91800d</color>
+    <color name="track_background_default_andere">#bbbbbb</color>
+
+    <!-- Highlight state -->
+    <color name="track_background_highlight">@color/track_background_default</color>
+    <color name="track_background_highlight_netzwerke_security_hard_software">#f8d7da</color>
+    <color name="track_background_highlight_digitale_selbstverteidigung">#d1ecf1</color>
+    <color name="track_background_highlight_ethik_wissenschaft_kultur_gesellschaft">#dceed9</color>
+    <color name="track_background_highlight_recht_politik">#fff3cd</color>
+    <color name="track_background_highlight_andere">#f8f8f8</color>
+
+</resources>
