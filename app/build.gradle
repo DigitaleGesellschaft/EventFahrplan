@@ -133,6 +133,23 @@ android {
             buildConfigField "String", "TRACE_DROID_EMAIL_ADDRESS", '"tobias.preuss+39c3@googlemail.com"'
             buildConfigField "String", "SCHEDULE_FEEDBACK_URL", '""'
         }
+        dgwk2026 {
+            dimension defaultDimension
+            applicationId "ch.digitale_gesellschaft.winterkongress.schedule"
+            versionName "${defaultConfig.versionName}-DGWK-Edition"
+            buildConfigField "String", "GOOGLE_PLAY_URL", '"https://play.google.com/store/apps/details?id=ch.digitale_gesellschaft.winterkongress.schedule"'
+            buildConfigField "String", "F_DROID_URL", '"https://f-droid.org/packages/ch.digitale_gesellschaft.winterkongress.schedule"'
+            buildConfigField "String", "SCHEDULE_URL", '"https://cfp.winterkongress.ch/wk26/schedule/export/schedule.xml"'
+            buildConfigField "String", "EVENT_URL", '"https://winterkongress.ch/2026/talks/%1$s/"'
+            buildConfigField "String", "EVENT_WEBSITE_URL", '"https://winterkongress.ch/2026"'
+            buildConfigField "String", "EVENT_POSTAL_ADDRESS", '"Seestrasse 395, 8038 Zürich"'
+            buildConfigField "String", "SERVER_BACKEND_TYPE", '"pretalx"'
+            buildConfigField "boolean", "SHOW_APP_DISCLAIMER", "true"
+            buildConfigField "boolean", "ENGAGE_C3NAV_APP_INSTALLATION", "false"
+            buildConfigField "String", "SOCIAL_MEDIA_HASHTAGS_HANDLES", '"#winterkongress"'
+            buildConfigField "String", "TRACE_DROID_EMAIL_ADDRESS", '"hoermi+dgwk2026-crash-reports@posteo.ch"'
+            buildConfigField "String", "SCHEDULE_FEEDBACK_URL", '""'
+        }
     }
 
     productFlavors.configureEach { flavor ->
