@@ -12,6 +12,7 @@ sealed class ServerBackendType(
     data object PENTABARF : ServerBackendType("pentabarf", Html)
     data object FRAB : ServerBackendType("frab", Markdown)
     data object PRETALX : ServerBackendType("pretalx", Markdown)
+    data object PRETALXDGWK : ServerBackendType("pretalx-dgwk", Markdown)
 
     companion object {
 
@@ -19,6 +20,8 @@ sealed class ServerBackendType(
             PENTABARF.name -> PENTABARF.markupLanguage
             FRAB.name -> FRAB.markupLanguage
             PRETALX.name -> PRETALX.markupLanguage
+            PRETALXDGWK.name -> PRETALXDGWK.markupLanguage
+
             else -> error("""Unknown server backend type: "$serverBackendTypeName".""")
         }
 

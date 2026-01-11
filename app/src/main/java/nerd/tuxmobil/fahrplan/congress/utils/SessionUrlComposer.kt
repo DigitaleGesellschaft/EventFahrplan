@@ -4,16 +4,18 @@ import nerd.tuxmobil.fahrplan.congress.BuildConfig
 import nerd.tuxmobil.fahrplan.congress.models.Session
 import nerd.tuxmobil.fahrplan.congress.repositories.AppRepository
 import nerd.tuxmobil.fahrplan.congress.utils.ServerBackendType.PENTABARF
+import nerd.tuxmobil.fahrplan.congress.utils.ServerBackendType.PRETALXDGWK
+import java.text.Normalizer
 
 class SessionUrlComposer(
 
-        private val sessionUrlTemplate: String = BuildConfig.EVENT_URL,
-        private val serverBackEndType: String = BuildConfig.SERVER_BACKEND_TYPE,
-        private val specialRoomNames: Set<String> = setOf(
-                AppRepository.ENGELSYSTEM_ROOM_NAME,
-                "ChaosTrawler", // rc3 2020
-                "rC3 Lounge", // rc3 2020
-        )
+    private val sessionUrlTemplate: String = BuildConfig.EVENT_URL,
+    private val serverBackEndType: String = BuildConfig.SERVER_BACKEND_TYPE,
+    private val specialRoomNames: Set<String> = setOf(
+        AppRepository.ENGELSYSTEM_ROOM_NAME,
+        "ChaosTrawler", // rc3 2020
+        "rC3 Lounge", // rc3 2020
+    )
 
 ) : SessionUrlComposition {
 
@@ -29,18 +31,48 @@ class SessionUrlComposer(
      * an empty string is returned.
      */
     override fun getSessionUrl(session: Session): String = when (serverBackEndType) {
-            PENTABARF.name -> getComposedSessionUrl(session.slug)
-            else -> session.url.ifEmpty {
-                if (session.roomName in specialRoomNames) {
-                    NO_URL
-                } else {
-                    getComposedSessionUrl(session.sessionId)
-                }
+        PENTABARF.name -> getComposedSessionUrl(session.slug)
+        PRETALXDGWK.name -> getWinterkongressUrl(session)
+        else -> session.url.ifEmpty {
+            if (session.roomName in specialRoomNames) {
+                NO_URL
+            } else {
+                getComposedSessionUrl(session.sessionId)
             }
         }
+    }
 
     private fun getComposedSessionUrl(sessionIdentifier: String) =
-            String.format(sessionUrlTemplate, sessionIdentifier)
+        String.format(sessionUrlTemplate, sessionIdentifier)
+
+    private fun getWinterkongressUrl(session: Session) =
+        if (session.description.isEmpty()) {
+            // Sessions without description have no URL on the website. See create_entries.py#L316-L318
+            NO_URL
+        } else {
+            // Slug is derived from title for all other sessions. See create_entries.py#L45
+
+            // work only in lower case
+            var slug = session.title.lowercase()
+
+            // remove URL unsafe characters (ä, ö, ü, é, è, à, ...)
+            slug = Normalizer.normalize(slug, Normalizer.Form.NFKD)
+                .replace("""[^\p{ASCII}]""".toRegex(), "")
+
+            // replace spaces
+            slug = slug.replace(' ', '_')
+
+            // replace dashes
+            slug = slug.replace('-', '_')
+
+            // remove remaining special characters (:, /, ...)
+            slug = slug.replace("""(?u)[^-\w]""".toRegex(), "")
+
+            // remove consecutive underscores
+            slug = slug.replace("""_+""".toRegex(), "_")
+
+            getComposedSessionUrl(slug)
+        }
 
     private companion object {
         const val NO_URL = ""
