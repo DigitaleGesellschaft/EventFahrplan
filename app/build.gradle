@@ -143,7 +143,7 @@ android {
             buildConfigField "String", "EVENT_URL", '"https://winterkongress.ch/2026/talks/%1$s/"'
             buildConfigField "String", "EVENT_WEBSITE_URL", '"https://winterkongress.ch/2026"'
             buildConfigField "String", "EVENT_POSTAL_ADDRESS", '"Seestrasse 395, 8038 Zürich"'
-            buildConfigField "String", "SERVER_BACKEND_TYPE", '"pretalx"'
+            buildConfigField "String", "SERVER_BACKEND_TYPE", '"pretalx-dgwk"'
             buildConfigField "boolean", "SHOW_APP_DISCLAIMER", "true"
             buildConfigField "boolean", "ENGAGE_C3NAV_APP_INSTALLATION", "false"
             buildConfigField "String", "SOCIAL_MEDIA_HASHTAGS_HANDLES", '"#winterkongress"'
