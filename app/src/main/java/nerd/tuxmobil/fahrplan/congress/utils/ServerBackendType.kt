@@ -21,7 +21,6 @@ sealed class ServerBackendType(
             FRAB.name -> FRAB.markupLanguage
             PRETALX.name -> PRETALX.markupLanguage
             PRETALXDGWK.name -> PRETALXDGWK.markupLanguage
-
             else -> error("""Unknown server backend type: "$serverBackendTypeName".""")
         }
 
