@@ -43,7 +43,7 @@ class SessionUrlComposer(
         }
 
     private fun getComposedSessionUrl(sessionIdentifier: String) =
-        String.format(sessionUrlTemplate, sessionIdentifier)
+            String.format(sessionUrlTemplate, sessionIdentifier)
 
     private fun getWinterkongressUrl(session: Session) =
         if (session.description.isEmpty()) {
