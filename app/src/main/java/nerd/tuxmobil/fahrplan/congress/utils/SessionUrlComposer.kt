@@ -9,13 +9,13 @@ import java.text.Normalizer
 
 class SessionUrlComposer(
 
-    private val sessionUrlTemplate: String = BuildConfig.EVENT_URL,
-    private val serverBackEndType: String = BuildConfig.SERVER_BACKEND_TYPE,
-    private val specialRoomNames: Set<String> = setOf(
-        AppRepository.ENGELSYSTEM_ROOM_NAME,
-        "ChaosTrawler", // rc3 2020
-        "rC3 Lounge", // rc3 2020
-    )
+        private val sessionUrlTemplate: String = BuildConfig.EVENT_URL,
+        private val serverBackEndType: String = BuildConfig.SERVER_BACKEND_TYPE,
+        private val specialRoomNames: Set<String> = setOf(
+                AppRepository.ENGELSYSTEM_ROOM_NAME,
+                "ChaosTrawler", // rc3 2020
+                "rC3 Lounge", // rc3 2020
+        )
 
 ) : SessionUrlComposition {
 
@@ -31,16 +31,16 @@ class SessionUrlComposer(
      * an empty string is returned.
      */
     override fun getSessionUrl(session: Session): String = when (serverBackEndType) {
-        PENTABARF.name -> getComposedSessionUrl(session.slug)
-        PRETALXDGWK.name -> getWinterkongressUrl(session)
-        else -> session.url.ifEmpty {
-            if (session.roomName in specialRoomNames) {
-                NO_URL
-            } else {
-                getComposedSessionUrl(session.sessionId)
+            PENTABARF.name -> getComposedSessionUrl(session.slug)
+            PRETALXDGWK.name -> getWinterkongressUrl(session)
+            else -> session.url.ifEmpty {
+                if (session.roomName in specialRoomNames) {
+                    NO_URL
+                } else {
+                    getComposedSessionUrl(session.sessionId)
+                }
             }
         }
-    }
 
     private fun getComposedSessionUrl(sessionIdentifier: String) =
         String.format(sessionUrlTemplate, sessionIdentifier)
