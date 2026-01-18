@@ -15,10 +15,12 @@ import kotlinx.coroutines.test.runTest
 import nerd.tuxmobil.fahrplan.congress.TestExecutionContext
 import nerd.tuxmobil.fahrplan.congress.alarms.AlarmServices
 import nerd.tuxmobil.fahrplan.congress.commons.BuildConfigProvision
+import nerd.tuxmobil.fahrplan.congress.commons.ExternalNavigation
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsParameter.SessionDetails
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsProperty.MarkupLanguage.Markdown
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsState.Loading
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsState.Success
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnSessionLinkClick
 import nerd.tuxmobil.fahrplan.congress.models.Alarm
 import nerd.tuxmobil.fahrplan.congress.models.Meta
 import nerd.tuxmobil.fahrplan.congress.models.Room
@@ -324,6 +326,111 @@ class SessionDetailsViewModelTest {
     }
 
     @Test
+    fun `OnSessionLinkClick invokes openLink if no default browseable app nor browser apps are present`() = runTest {
+        val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+        var invokedLink = ""
+        val externalNavigation = object : ExternalNavigation {
+            override fun openMap(locationText: String) = throw NotImplementedError()
+            override fun getBrowserApps() = emptyList<String>()
+            override fun getDefaultBrowsableApp() = null
+            override fun openLink(link: String) {
+                invokedLink = link
+            }
+
+            override fun openLinkWithApp(link: String, packageName: String) =
+                throw NotImplementedError()
+        }
+        val viewModel = createViewModel(
+            externalNavigation = externalNavigation,
+        )
+        viewModel.onViewEvent(OnSessionLinkClick(link))
+        assertThat(invokedLink).isEqualTo(link)
+    }
+
+    @Test
+    fun `OnSessionLinkClick invokes openLink if the only browser apps is the app itself`() =
+        runTest {
+            val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+            var invokedLink = ""
+            val buildConfigProvision = mock<BuildConfigProvision> {
+                on { packageName } doReturn "com.example.app"
+            }
+            val externalNavigation = object : ExternalNavigation {
+                override fun openMap(locationText: String) = throw NotImplementedError()
+                override fun getDefaultBrowsableApp() = null
+                override fun getBrowserApps() = listOf("com.example.app")
+
+                override fun openLink(link: String) {
+                    invokedLink = link
+                }
+
+                override fun openLinkWithApp(link: String, packageName: String) =
+                    throw NotImplementedError()
+            }
+            val viewModel = createViewModel(
+                buildConfigProvision = buildConfigProvision,
+                externalNavigation = externalNavigation,
+            )
+            viewModel.onViewEvent(OnSessionLinkClick(link))
+            assertThat(invokedLink).isEqualTo(link)
+        }
+
+    @Test
+    fun `OnSessionLinkClick invokes openLinkWithApp if at least one other browser app is present`() =
+        runTest {
+            val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+            var invokedLink = ""
+            var invokedPackage = ""
+            val buildConfigProvision = mock<BuildConfigProvision> {
+                on { packageName } doReturn "com.example.app"
+            }
+            val externalNavigation = object : ExternalNavigation {
+                override fun openMap(locationText: String) = throw NotImplementedError()
+                override fun getDefaultBrowsableApp() = null
+                override fun getBrowserApps() = listOf("com.example.browser")
+                override fun openLink(link: String) = throw NotImplementedError()
+                override fun openLinkWithApp(link: String, packageName: String) {
+                    invokedLink = link
+                    invokedPackage = packageName
+                }
+            }
+            val viewModel = createViewModel(
+                buildConfigProvision = buildConfigProvision,
+                externalNavigation = externalNavigation,
+            )
+            viewModel.onViewEvent(OnSessionLinkClick(link))
+            assertThat(invokedLink).isEqualTo(link)
+            assertThat(invokedPackage).isEqualTo("com.example.browser")
+        }
+    @Test
+    fun `OnSessionLinkClick invokes openLinkWithApp if a default browseable app is present`() =
+        runTest {
+            val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+            var invokedLink = ""
+            var invokedPackage = ""
+            val buildConfigProvision = mock<BuildConfigProvision> {
+                on { packageName } doReturn "com.example.app"
+            }
+            val externalNavigation = object : ExternalNavigation {
+                override fun openMap(locationText: String) = throw NotImplementedError()
+                override fun getDefaultBrowsableApp() = "com.example.browser2"
+                override fun getBrowserApps() = listOf("com.example.browser1", "com.example.browser2")
+                override fun openLink(link: String) = throw NotImplementedError()
+                override fun openLinkWithApp(link: String, packageName: String) {
+                    invokedLink = link
+                    invokedPackage = packageName
+                }
+            }
+            val viewModel = createViewModel(
+                buildConfigProvision = buildConfigProvision,
+                externalNavigation = externalNavigation,
+            )
+            viewModel.onViewEvent(OnSessionLinkClick(link))
+            assertThat(invokedLink).isEqualTo(link)
+            assertThat(invokedPackage).isEqualTo("com.example.browser2")
+        }
+
+    @Test
     fun `roomStateMessage emits unknown when feature is disabled`() = runTest {
         val repository = createRepository(
             selectedSessionFlow = emptyFlow(),
@@ -457,11 +564,12 @@ class SessionDetailsViewModelTest {
     }
 
     private fun createViewModel(
-        repository: AppRepository,
+        repository: AppRepository = createRepository(),
         logging: Logging = mock(),
         buildConfigProvision: BuildConfigProvision = mock(),
         alarmServices: AlarmServices = mock(),
         notificationHelper: NotificationHelper = mock(),
+        externalNavigation: ExternalNavigation = mock(),
         simpleSessionFormat: SimpleSessionFormat = mock(),
         jsonSessionFormat: JsonSessionFormat = mock(),
         feedbackUrlComposition: FeedbackUrlComposition = mock(),
@@ -475,6 +583,7 @@ class SessionDetailsViewModelTest {
         buildConfigProvision = buildConfigProvision,
         alarmServices = alarmServices,
         notificationHelper = notificationHelper,
+        externalNavigation = externalNavigation,
         sessionDetailsParameterFactory = createSessionDetailsParameterFactory(),
         selectedSessionParameterFactory = createSelectedSessionParameterFactory(),
         simpleSessionFormat = simpleSessionFormat,
@@ -530,6 +639,7 @@ class SessionDetailsViewModelTest {
     }
 
     private object EnableFosdemRoomStatesBuildConfig : BuildConfigProvision {
+        override val packageName: String = ""
         override val versionName: String = ""
         override val versionCode: Int = 0
         override val eventPostalAddress: String = ""
@@ -542,7 +652,11 @@ class SessionDetailsViewModelTest {
         override val googlePlayUrl: String = ""
         override val dataPrivacyStatementDeUrl: String = ""
         override val enableFosdemRoomStates: Boolean = true
+        override val fosdemRoomStatesPath: String = ""
+        override val fosdemRoomStatesUrl: String = ""
+        override val scheduleUrl: String = ""
         override val serverBackendType: String = ""
+        override val enableEngelsystemShifts: Boolean = false
 
     }
 

@@ -1,5 +1,6 @@
 package nerd.tuxmobil.fahrplan.congress.schedule
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import nerd.tuxmobil.fahrplan.congress.applinks.SlugFactory
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticsUiState
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticsUiStateFactory
 import nerd.tuxmobil.fahrplan.congress.dataconverters.toSessionsAppModel
@@ -39,6 +41,7 @@ internal class MainViewModel(
     private val notificationHelper: NotificationHelper,
     private val changeStatisticsUiStateFactory: ChangeStatisticsUiStateFactory,
     private val errorMessageFactory: ErrorMessage.Factory,
+    private val slugFactory: SlugFactory,
     private val executionContext: ExecutionContext,
 ) : ViewModel() {
 
@@ -68,6 +71,7 @@ internal class MainViewModel(
 
     init {
         observeLoadScheduleState()
+        observeEngelsystemUriParsingErrorState()
     }
 
     private fun observeLoadScheduleState() {
@@ -76,6 +80,17 @@ internal class MainViewModel(
                 val uiState = state.toUiState()
                 mutableLoadScheduleUiState.sendOneTimeEvent(uiState)
                 state.handleFailureStates()
+            }
+        }
+    }
+
+    private fun observeEngelsystemUriParsingErrorState() {
+        launch {
+            repository.engelsystemUriParsingErrorState.collectLatest { errorState ->
+                mutableErrorMessage.value = when (errorState == null) {
+                    true -> null
+                    false -> errorMessageFactory.getMessageForEngelsystemUrlError(errorState)
+                }
             }
         }
     }
@@ -141,7 +156,7 @@ internal class MainViewModel(
     }
 
     private fun onParsingDone() {
-        if (!repository.readScheduleChangesSeen()) {
+        if (repository.readShowScheduleUpdateDialogEnabled() && !repository.readScheduleChangesSeen()) {
             val changedSessions = repository.loadChangedSessions().toSessionsAppModel()
             if (changedSessions.isNotEmpty()) {
                 val scheduleVersion = repository.readMeta().version
@@ -197,6 +212,17 @@ internal class MainViewModel(
             val isUpdated = repository.updateSelectedSessionId(sessionId)
             if (isUpdated) {
                 mutableOpenSessionDetails.sendOneTimeEvent(Unit)
+            }
+        }
+    }
+
+    fun openSessionDetailsFromAppLink(uri: Uri) {
+        launch {
+            slugFactory.getSlug(uri)?.let {
+                val isUpdated = repository.updateSelectedSessionIdFromSlug(it)
+                if (isUpdated) {
+                    mutableOpenSessionDetails.sendOneTimeEvent(Unit)
+                }
             }
         }
     }

@@ -9,12 +9,17 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import nerd.tuxmobil.fahrplan.congress.TestExecutionContext
+import nerd.tuxmobil.fahrplan.congress.applinks.Slug
+import nerd.tuxmobil.fahrplan.congress.applinks.SlugFactory
 import nerd.tuxmobil.fahrplan.congress.changes.ChangeType.CANCELED
 import nerd.tuxmobil.fahrplan.congress.changes.ChangeType.CHANGED
 import nerd.tuxmobil.fahrplan.congress.changes.ChangeType.NEW
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticProperty
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticsUiState
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticsUiStateFactory
+import nerd.tuxmobil.fahrplan.congress.engelsystem.EngelsystemUriParsingResult
+import nerd.tuxmobil.fahrplan.congress.engelsystem.EngelsystemUriParsingResult.Error
+import nerd.tuxmobil.fahrplan.congress.engelsystem.EngelsystemUriParsingResult.Error.Type.HOST_MISSING
 import nerd.tuxmobil.fahrplan.congress.models.Alarm
 import nerd.tuxmobil.fahrplan.congress.models.Meta
 import nerd.tuxmobil.fahrplan.congress.net.HttpStatus
@@ -187,6 +192,39 @@ class MainViewModelTest {
                 expectNoEvents()
             }
             verifyInvokedOnce(repository).loadScheduleState
+        }
+
+    @Test
+    fun `EngelsystemUriParsingResult Error posts null to errorMessage property when Engelsystem URL parsing succeeded`() =
+        runTest {
+            val repository = createRepository(
+                engelsystemUriParsingErrorStateFlow = flowOf(null)
+            )
+            val errorMessageFactory = mock<ErrorMessage.Factory> {
+                on { getMessageForEngelsystemUrlError(any()) } doReturn TitledMessage("fake message", "fake url")
+            }
+            val viewModel = createViewModel(repository, errorMessageFactory = errorMessageFactory)
+            viewModel.errorMessage.test {
+                assertThat(awaitItem()).isNull()
+            }
+            verifyInvokedOnce(repository).engelsystemUriParsingErrorState
+        }
+
+    @Test
+    fun `EngelsystemUriParsingResult Error posts TitledMessage to errorMessage property when Engelsystem URL parsing failed`() =
+        runTest {
+            val repository = createRepository(
+                engelsystemUriParsingErrorStateFlow = flowOf(Error(HOST_MISSING, "https://?key=a1b2c3"))
+            )
+            val errorMessageFactory = mock<ErrorMessage.Factory> {
+                on { getMessageForEngelsystemUrlError(any()) } doReturn TitledMessage("fake message", "fake url")
+            }
+            val viewModel = createViewModel(repository, errorMessageFactory = errorMessageFactory)
+            val expectedErrorMessage = TitledMessage("fake message", "fake url")
+            viewModel.errorMessage.test {
+                assertThat(awaitItem()).isEqualTo(expectedErrorMessage)
+            }
+            verifyInvokedOnce(repository).engelsystemUriParsingErrorState
         }
 
     @Test
@@ -405,6 +443,45 @@ class MainViewModelTest {
     }
 
     @Test
+    fun `openSessionDetailsFromAppLink posts to openSessionDetails property`() = runTest {
+        val repository = createRepository(updatedSelectedSessionId = true)
+        val slugFactory = mock<SlugFactory> {
+            on { getSlug(any()) } doReturn Slug.PretalxSlug("pretalx-slug")
+        }
+        val viewModel = createViewModel(repository, slugFactory = slugFactory)
+        viewModel.openSessionDetailsFromAppLink(mock())
+        viewModel.openSessionDetails.test {
+            assertThat(awaitItem()).isEqualTo(Unit)
+        }
+    }
+
+    @Test
+    fun `openSessionDetailsFromAppLink does not post to openSessionDetails property when slug is null`() = runTest {
+        val repository = createRepository(updatedSelectedSessionId = true)
+        val slugFactory = mock<SlugFactory> {
+            on { getSlug(any()) } doReturn null
+        }
+        val viewModel = createViewModel(repository, slugFactory = slugFactory)
+        viewModel.openSessionDetailsFromAppLink(mock())
+        viewModel.openSessionDetails.test {
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `openSessionDetailsFromAppLink does not post to openSessionDetails property when slug is not present`() = runTest {
+        val repository = createRepository(updatedSelectedSessionId = false)
+        val slugFactory = mock<SlugFactory> {
+            on { getSlug(any()) } doReturn Slug.PretalxSlug("pretalx-slug")
+        }
+        val viewModel = createViewModel(repository, slugFactory = slugFactory)
+        viewModel.openSessionDetailsFromAppLink(mock())
+        viewModel.openSessionDetails.test {
+            expectNoEvents()
+        }
+    }
+
+    @Test
     fun `onCloseChangeStatisticsScreen post to openSessionChanges property`() = runTest {
         val repository = createRepository()
         val viewModel = createViewModel(repository)
@@ -475,17 +552,21 @@ class MainViewModelTest {
 
     private fun createRepository(
         loadScheduleStateFlow: Flow<LoadScheduleState> = emptyFlow(),
+        engelsystemUriParsingErrorStateFlow: Flow<Error?> = emptyFlow(),
         scheduleChangesSeen: Boolean = true,
         changedSessions: List<SessionDatabaseModel> = emptyList(),
         updatedSelectedSessionId: Boolean = false,
         alarms: List<Alarm> = emptyList()
     ) = mock<AppRepository> {
         on { loadScheduleState } doReturn loadScheduleStateFlow
+        on { engelsystemUriParsingErrorState } doReturn engelsystemUriParsingErrorStateFlow
         on { readScheduleChangesSeen() } doReturn scheduleChangesSeen
         on { readMeta() } doReturn Meta(version = "")
         on { loadChangedSessions() } doReturn changedSessions
         on { updateSelectedSessionId(any()) } doReturn updatedSelectedSessionId
+        on { updateSelectedSessionIdFromSlug(any()) } doReturn updatedSelectedSessionId
         on { readAlarms(any()) } doReturn alarms
+        on { readShowScheduleUpdateDialogEnabled() } doReturn true
     }
 
     private fun createViewModel(
@@ -493,11 +574,13 @@ class MainViewModelTest {
         notificationHelper: NotificationHelper = mock(),
         changeStatisticsUiStateFactory: ChangeStatisticsUiStateFactory = mock(),
         errorMessageFactory: ErrorMessage.Factory = createFakeErrorMessageFactory(),
+        slugFactory: SlugFactory = mock(),
     ) = MainViewModel(
         repository = repository,
         notificationHelper = notificationHelper,
         changeStatisticsUiStateFactory = changeStatisticsUiStateFactory,
         errorMessageFactory = errorMessageFactory,
+        slugFactory = slugFactory,
         executionContext = TestExecutionContext,
     )
 

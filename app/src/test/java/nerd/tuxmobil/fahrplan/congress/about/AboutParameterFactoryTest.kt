@@ -197,6 +197,7 @@ private object SomeEmptyResourceResolver : ResourceResolving {
 }
 
 private object CompleteBuildConfigProvider : BuildConfigProvision {
+    override val packageName: String = "com.example.app"
     override val versionName: String = "1.63.2"
     override val versionCode: Int = 100
     override val eventPostalAddress: String = "Congressplatz 1, 20355 Hamburg"
@@ -209,10 +210,15 @@ private object CompleteBuildConfigProvider : BuildConfigProvision {
     override val googlePlayUrl: String = "https://play.google.com/store/apps/details?id=info.metadude.android.congress.schedule"
     override val dataPrivacyStatementDeUrl: String = "https://github.com/EventFahrplan/EventFahrplan/blob/master/DATA-PRIVACY-DE.md"
     override val enableFosdemRoomStates: Boolean = false
+    override val fosdemRoomStatesPath: String = ""
+    override val fosdemRoomStatesUrl: String = ""
+    override val scheduleUrl: String = ""
     override val serverBackendType: String = "pretalx"
+    override val enableEngelsystemShifts: Boolean = false
 }
 
 private object IncompleteBuildConfigProvider : BuildConfigProvision {
+    override val packageName: String = ""
     override val versionName: String = ""
     override val versionCode: Int = 200
     override val eventPostalAddress: String = "Congressplatz 1, 20355 Hamburg"
@@ -225,5 +231,9 @@ private object IncompleteBuildConfigProvider : BuildConfigProvision {
     override val googlePlayUrl: String = "https://play.google.com/store/apps/details?id=info.metadude.android.congress.schedule"
     override val dataPrivacyStatementDeUrl: String = "https://github.com/EventFahrplan/EventFahrplan/blob/master/DATA-PRIVACY-DE.md"
     override val enableFosdemRoomStates: Boolean = false
+    override val fosdemRoomStatesPath: String = ""
+    override val fosdemRoomStatesUrl: String = ""
+    override val scheduleUrl: String = ""
     override val serverBackendType: String = "pretalx"
+    override val enableEngelsystemShifts: Boolean = false
 }

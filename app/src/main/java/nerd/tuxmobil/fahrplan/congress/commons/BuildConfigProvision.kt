@@ -1,6 +1,7 @@
 package nerd.tuxmobil.fahrplan.congress.commons
 
 interface BuildConfigProvision {
+    val packageName: String
     val versionName: String
     val versionCode: Int
     val eventPostalAddress: String
@@ -13,5 +14,9 @@ interface BuildConfigProvision {
     val googlePlayUrl: String
     val dataPrivacyStatementDeUrl: String
     val enableFosdemRoomStates: Boolean
+    val fosdemRoomStatesPath: String
+    val fosdemRoomStatesUrl: String
+    val scheduleUrl: String
     val serverBackendType: String
+    val enableEngelsystemShifts: Boolean
 }

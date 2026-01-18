@@ -97,9 +97,9 @@
     <string name="about_source_code">Source code</string>
     <string name="about_translation_platform">Translation platform</string>
     <string name="copyright_notes" translatable="false">
-        Copyright 2013-2025 johnjohndoe.
+        Copyright 2013-2026 johnjohndoe.
         \nCopyright 2011-2015 Daniel Dorau.
-        \n\nContributions from 0x5ubt13, Adriano Pereira Junior, Akarsh Seggemu, Александр Рознятовский, aligoush, Andrea Marziali, Andrulko, Andy Scherzinger, Andreas Schildbach, Animesh Verma, bashtian, bjoernb, Björn Olsson Jarl, burned42, ButterflyOfFire, cacarrara, Caio Volpato, Chase, cketti, codingcatgirl, Dominik Stadler, e4ch, entropynil, erebion, ideadapt, isi_ko404, IsoLinearCHiP, Jasper van der Graaf, Joergi, Julius Vitkauskas, koelnkalkverbot, kpc21, Larissa Yasin, lepawa, ligi, lucadelu, Luis Azcuaga, María Arias de Reyna, Mateus Baptista, Matthias Geisler, Matthias Hunstock, Matthias Mair, MichaelRocks, Miguel Beltran, mtpa, Muha Aliss, Nghiem Xuan Hien, NiciDieNase, Noemis, NWuensche, Oguz Yuksel, Omicron, ozgurbaykal, Poschi, Qwertele, Róbert Papp, Robin Janssens, rotrot, Sjors van Mierlo, Smarzaro, Stefan Medack, SubOptimal, Su Jade, taseret, Teeranai.P, Torsten Grote, Victor Herasme, Vladimir Alabov, Yanicka, zadintuvas.
+        \n\nContributions from 0x5ubt13, Adriano Pereira Junior, Akarsh Seggemu, Александр Рознятовский, aligoush, Andrea Marziali, Andreas Wirth, Andrulko, Andy Scherzinger, Andreas Schildbach, Animesh Verma, bashtian, bjoernb, Björn Olsson Jarl, burned42, ButterflyOfFire, cacarrara, Caio Volpato, Chase, cketti, codingcatgirl, Dominik Stadler, e4ch, entropynil, erebion, ideadapt, isi_ko404, IsoLinearCHiP, Jasper van der Graaf, Joergi, Julius Vitkauskas, koelnkalkverbot, kpc21, Larissa Yasin, lepawa, ligi, lucadelu, Luis Azcuaga, María Arias de Reyna, Mateus Baptista, Matthias Geisler, Matthias Hunstock, Matthias Mair, MichaelRocks, Miguel Beltran, mtpa, Muha Aliss, Nghiem Xuan Hien, NiciDieNase, Noemis, NWuensche, Oguz Yuksel, Omicron, ozgurbaykal, Poschi, Qwertele, Róbert Papp, Robin Janssens, rotrot, Sjors van Mierlo, Smarzaro, Stefan Medack, SubOptimal, Su Jade, taseret, Teeranai.P, Torsten Grote, Victor Herasme, Vladimir Alabov, Yanicka, zadintuvas.
         \n\nPortions copyright 2008-2011 The K-9 Dog Walkers and 2006-2013 the Android Open Source Project.
     </string>
     <string name="today">today</string>
@@ -327,5 +327,22 @@
     <string name="room_state_full">full</string>
     <string name="room_state_too_full">too full</string>
     <string name="room_state_not_retrievable">not retrievable</string>
+
+    <!-- Search filters -->
+    <string name="search_filter_is_favorite">Is favored</string>
+    <string name="search_filter_not_favorite">Not favored</string>
+    <string name="search_filter_has_alarm">Has alarm</string>
+    <string name="search_filter_not_recorded">Not recorded</string>
+    <string name="search_filter_recorded">Recorded</string>
+    <string name="search_filter_within_speaker_names">Within speaker names</string>
+
+    <!-- Engelsystem URL error -->
+    <string name="engelsystem_url_error_title">Error parsing <xliff:g example="Engelsystem" id="engelsystemAlias">%s</xliff:g> JSON Export URL</string>
+    <string name="engelsystem_url_error_url">Malformed URL: <xliff:g example="https://example.com" id="url">%s</xliff:g></string>
+    <string name="engelsystem_url_error_scheme">Missing scheme part in URL: <xliff:g example="https://example.com" id="url">%s</xliff:g></string>
+    <string name="engelsystem_url_error_host">Missing host part in URL: <xliff:g example="https://example.com" id="url">%s</xliff:g></string>
+    <string name="engelsystem_url_error_path">Missing path part in URL: <xliff:g example="https://example.com" id="url">%s</xliff:g></string>
+    <string name="engelsystem_url_error_query">Missing query part in URL: <xliff:g example="https://example.com" id="url">%s</xliff:g></string>
+    <string name="engelsystem_url_error_api_key">Invalid API key part in URL: <xliff:g example="https://example.com" id="url">%s</xliff:g></string>
 
 </resources>
