@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Winterkongress 2026 Schedule</string>
     <string name="app_hardcoded_subtitle">
-        Winterkongress of the Digital Society on February 20th and 21st 2026
+        Winterkongress of Digital Society on February 20 and 21 2026
     </string>
     <string name="conference_name" translatable="false">DGWK2026</string>
     <string name="copyright_logo">
