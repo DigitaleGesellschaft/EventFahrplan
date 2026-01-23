@@ -1,0 +1,37 @@
+Winterkongress 2026 Schedule
+
+Winterkongress of digital society on February 20 and 21 2026
+
+Winterkongress is a co-production of Rote Fabrik and digital society. We thank all supporters cordially!
+
+https://winterkongress.ch/2026/
+
+<b>App features</b>
+
+<ul>
+	<li>View program by day and rooms (side by side)</li>
+	<li>Custom grid layout for smartphones (try landscape mode) and tablets</li>
+	<li>Read detailed descriptions (speaker names, start time, room name, links, ...) of sessions</li>
+	<li>Search and filter through all sessions</li>
+	<li>Add sessions to favourites list</li>
+	<li>Export favourites list</li>
+	<li>Setup alarms for individual sessions</li>
+	<li>Add sessions to your personal calendar</li>
+	<li>Share a website link to an session with others</li>
+	<li>Keep track of program changes</li>
+	<li>Automatic program updates (configurable in settings)</li>
+	<li>Automatically open sessions from web links</li>
+</ul>
+
+🤝 You can help to translate the app at:
+https://crowdin.com/project/eventfahrplan
+
+💡 Questions regarding the content can only be answered by the content team
+of digital society. This app simply offers a way to consume and personalise
+the conference schedule.
+
+💣 Bug reports are very welcome. It would be awesome if you can describe how
+to reproduce the particular error. Please use the GitHub issue tracker
+https://github.com/DigitaleGesellschaft/EventFahrplan/issues.
+
+🎨 Digital society. Design by studio kollygujer

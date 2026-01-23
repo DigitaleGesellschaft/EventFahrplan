@@ -1,0 +1,4 @@
+Initial release of the DGWK flavour of EventFahrplan
+
+* Add Digiges flavour
+* Based on Eventfahrplan https://github.com/EventFahrplan/EventFahrplan

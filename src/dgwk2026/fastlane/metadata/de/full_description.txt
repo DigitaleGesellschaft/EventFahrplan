@@ -1,0 +1,55 @@
+Winterkongress 2026 Fahrplan
+
+Winterkongress der Digitalen Gesellschaft vom 20. und 21. Februar 2026
+
+Der Winterkongress ist das jährliche Treffen der Digitalen Gesellschaft:
+Am Freitagabend, 20. Februar und Samstag, 21. Februar 2026 kommen zum
+neunten Mal Hacker, Programmiererinnen, Aktivisten und Interessierte in der
+Roten Fabrik in Zürich zusammen, um sich zu den Themen rund um
+Informationstechnologie, der Vernetzung und deren Auswirkungen auf unsere
+Gesellschaft auszutauschen.
+
+Der Winterkongress ist die wichtigste Veranstaltung für digitale
+Freiheitsrechte in der Schweiz. Sie ist nicht-kommerziell und wird von und
+für die Community veranstaltet. Zu dieser zählen sich auch Mitglieder von
+Behörden, der Wissenschaft, der Politik und Medienschaffende, die sich am
+Winterkongress mit der interessierten Öffentlichkeit austauschen.
+Die Veranstaltung soll zum Engagement veranlassen.
+
+Auf dem Programm stehen jeweils über 30 Vorträge und Workshops aufgeteilt in
+vier thematischen Tracks. Diese reichen von «Digitale Selbstverteidigung»
+über «Ethik, Wissenschaft, Kultur & Gesellschaft» und «Recht & Politik»
+bis zu «Netzwerke, Security, Hard- & Software». Neben den inhaltlichen
+Schwerpunkten gibt es genügend Platz für den spontanen Austausch.
+
+Der Winterkongress ist eine Koproduktion der Roten Fabrik und der
+Digitalen Gesellschaft. Wir danken allen Unterstützer:innen herzlich!
+
+https://winterkongress.ch/2026/
+
+<b>Funktionen</b>
+<ul>
+	<li>Tagesüberblick über alle Programmpunkte</li>
+	<li>Beschreibung von Veranstaltungen lesen</li>
+	<li>Veranstaltungen in persönlicher Favoritenliste verwalten</li>
+	<li>Alle Veranstaltungen durchsuchen und filtern</li>
+	<li>Favoritenliste exportieren</li>
+	<li>Alarm für Veranstaltungen setzen</li>
+	<li>Veranstaltungen in Kalender eintragen</li>
+	<li>Link zu Veranstaltungen mit anderen teilen</li>
+	<li>Programmänderungen einsehen</li>
+	<li>Web-Links werden automatisch in der App geöffnet</li>
+</ul>
+
+🤝 Du kannst mithelfen, die App zu übersetzen:
+https://crowdin.com/project/eventfahrplan
+
+💡 Inhaltliche Fragen zum Programm kann nur das Content-Team der
+Digitalen Gesellschaft beantworten. Diese App stellt lediglich das
+Programm zur Verfügung.
+
+💣 Fehlerberichte sind herzlich willkommen, aber achte darauf, dass du
+erklärst, wie man den Fehler reproduzieren kann. Bitte nutze den GitHub
+Issue-Tracker https://github.com/DigitaleGesellschaft/EventFahrplan/issues.
+
+🎨 Digitale Gesellschaft. Design von studio kollygujer
