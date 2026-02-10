@@ -20,7 +20,7 @@ android {
     buildToolsVersion = Android.buildToolsVersion
 
     defaultConfig {
-        versionCode 1
+        versionCode 115
         versionName "1.0.0"
         minSdk Android.minSdkVersion
         targetSdk Android.targetSdkVersion
