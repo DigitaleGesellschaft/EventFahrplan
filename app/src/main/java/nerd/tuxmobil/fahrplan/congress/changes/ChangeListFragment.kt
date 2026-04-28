@@ -9,25 +9,19 @@ import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.MainThread
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
-import androidx.fragment.app.viewModels
-import info.metadude.android.eventfahrplan.commons.flow.observe
 import nerd.tuxmobil.fahrplan.congress.R
 import nerd.tuxmobil.fahrplan.congress.base.AbstractListFragment.OnSessionListClick
-import nerd.tuxmobil.fahrplan.congress.commons.ResourceResolver
-import nerd.tuxmobil.fahrplan.congress.commons.ScreenNavigation
 import nerd.tuxmobil.fahrplan.congress.contract.BundleKeys
+import nerd.tuxmobil.fahrplan.congress.designsystem.themes.EventFahrplanTheme
 import nerd.tuxmobil.fahrplan.congress.extensions.replaceFragment
 import nerd.tuxmobil.fahrplan.congress.extensions.withArguments
-import nerd.tuxmobil.fahrplan.congress.notifications.NotificationHelper
-import nerd.tuxmobil.fahrplan.congress.repositories.AppRepository
-import nerd.tuxmobil.fahrplan.congress.utils.ContentDescriptionFormatter
-import nerd.tuxmobil.fahrplan.congress.utils.SessionPropertiesFormatter
+import nerd.tuxmobil.fahrplan.congress.sidepane.OnSidePaneCloseListener
+import nerd.tuxmobil.fahrplan.congress.utils.ActivityHelper.navigateUp
 
 /**
  * A fragment representing a list of Items.
@@ -60,16 +54,6 @@ class ChangeListFragment : Fragment() {
     }
 
     private var onSessionListClickListener: OnSessionListClick? = null
-    private val viewModelFactory by lazy {
-        val resourceResolving = ResourceResolver(requireContext())
-        ChangeListViewModelFactory(
-            AppRepository,
-            resourceResolving,
-            SessionPropertiesFormatter(resourceResolving),
-            ContentDescriptionFormatter(resourceResolving),
-        )
-    }
-    private val viewModel: ChangeListViewModel by viewModels { viewModelFactory }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val arguments = requireArguments()
@@ -81,40 +65,35 @@ class ChangeListFragment : Fragment() {
         fragmentView.findViewById<ComposeView>(R.id.session_changes_view).apply {
             setViewCompositionStrategy(DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                SessionChangesScreen(
-                    state = viewModel.sessionChangesState.collectAsState().value,
-                    showInSidePane = sidePane,
-                    onViewEvent = viewModel::onViewEvent,
-                )
+                EventFahrplanTheme {
+                    SessionChangesScreen(
+                        showInSidePane = sidePane,
+                        onBack = ::navigateBack,
+                        onNavigateToSession = ::navigateToSession,
+                    )
+                }
             }
             isClickable = true
         }
         return fragmentView
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        observeViewModel()
+    private fun navigateToSession(sessionId: String) {
+        onSessionListClickListener?.onSessionListClick(sessionId)
     }
 
-    private fun observeViewModel() {
-        viewModel.scheduleChangesSeen.observe(viewLifecycleOwner) {
-            NotificationHelper(requireContext()).cancelScheduleUpdateNotification()
+    private fun navigateBack() {
+        val activity = requireActivity()
+        when (val listener = activity as? OnSidePaneCloseListener) {
+            null -> activity.navigateUp()
+            else -> listener.onSidePaneClose(FRAGMENT_TAG)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.updateScheduleChangesSeen(changesSeen = true)
     }
 
     @MainThread
     @CallSuper
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        viewModel.screenNavigation = ScreenNavigation { sessionId ->
-            onSessionListClickListener?.onSessionListClick(sessionId)
-        }
         if (context is OnSessionListClick) {
             onSessionListClickListener = context
         } else {
@@ -127,7 +106,6 @@ class ChangeListFragment : Fragment() {
     override fun onDetach() {
         super.onDetach()
         onSessionListClickListener = null
-        viewModel.screenNavigation = null
     }
 
 }

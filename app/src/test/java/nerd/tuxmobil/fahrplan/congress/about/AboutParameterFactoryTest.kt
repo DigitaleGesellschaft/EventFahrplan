@@ -9,6 +9,10 @@ import nerd.tuxmobil.fahrplan.congress.commons.TextResource.Html
 import nerd.tuxmobil.fahrplan.congress.commons.TextResource.PostalAddress
 import nerd.tuxmobil.fahrplan.congress.models.Meta
 import nerd.tuxmobil.fahrplan.congress.models.ScheduleGenerator
+import nerd.tuxmobil.fahrplan.congress.utils.ScheduleFileFormat
+import nerd.tuxmobil.fahrplan.congress.utils.ScheduleFileFormat.SCHEDULE_V1_XML
+import nerd.tuxmobil.fahrplan.congress.utils.ServerBackendType
+import nerd.tuxmobil.fahrplan.congress.utils.ServerBackendType.PRETALX
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 
@@ -213,8 +217,10 @@ private object CompleteBuildConfigProvider : BuildConfigProvision {
     override val fosdemRoomStatesPath: String = ""
     override val fosdemRoomStatesUrl: String = ""
     override val scheduleUrl: String = ""
-    override val serverBackendType: String = "pretalx"
+    override val scheduleFileFormat: ScheduleFileFormat = SCHEDULE_V1_XML
+    override val serverBackendType: ServerBackendType = PRETALX
     override val enableEngelsystemShifts: Boolean = false
+    override val enableChaosflixExport: Boolean = false
 }
 
 private object IncompleteBuildConfigProvider : BuildConfigProvision {
@@ -234,6 +240,8 @@ private object IncompleteBuildConfigProvider : BuildConfigProvision {
     override val fosdemRoomStatesPath: String = ""
     override val fosdemRoomStatesUrl: String = ""
     override val scheduleUrl: String = ""
-    override val serverBackendType: String = "pretalx"
+    override val scheduleFileFormat: ScheduleFileFormat = SCHEDULE_V1_XML
+    override val serverBackendType: ServerBackendType = PRETALX
     override val enableEngelsystemShifts: Boolean = false
+    override val enableChaosflixExport: Boolean = false
 }

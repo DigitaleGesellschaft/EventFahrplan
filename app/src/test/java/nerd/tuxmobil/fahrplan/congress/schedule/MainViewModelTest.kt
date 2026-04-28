@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import info.metadude.android.eventfahrplan.commons.testing.MainDispatcherTestExtension
 import info.metadude.android.eventfahrplan.commons.testing.verifyInvokedOnce
+import info.metadude.android.eventfahrplan.commons.testing.withMethod
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -17,7 +18,6 @@ import nerd.tuxmobil.fahrplan.congress.changes.ChangeType.NEW
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticProperty
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticsUiState
 import nerd.tuxmobil.fahrplan.congress.changes.statistic.ChangeStatisticsUiStateFactory
-import nerd.tuxmobil.fahrplan.congress.engelsystem.EngelsystemUriParsingResult
 import nerd.tuxmobil.fahrplan.congress.engelsystem.EngelsystemUriParsingResult.Error
 import nerd.tuxmobil.fahrplan.congress.engelsystem.EngelsystemUriParsingResult.Error.Type.HOST_MISSING
 import nerd.tuxmobil.fahrplan.congress.models.Alarm
@@ -393,14 +393,16 @@ class MainViewModelTest {
         val repository = createRepository()
         val viewModel = createViewModel(repository)
         viewModel.requestScheduleUpdate(isUserRequest = true)
-        verifyInvokedOnce(repository).loadSchedule(isUserRequest = true, onFetchingDone = {}, onParsingDone = {}, onLoadingShiftsDone = {})
+        verifyInvokedOnce(repository).loadSchedule(isUserRequest = true)
     }
 
     @Test
-    fun `cancelLoading invokes repository function`() {
+    fun `onCleared invokes repository function`() {
         val repository = createRepository()
         val viewModel = createViewModel(repository)
-        viewModel.cancelLoading()
+        MainViewModel::class.withMethod("onCleared") {
+            invoke(viewModel)
+        }
         verifyInvokedOnce(repository).cancelLoading()
     }
 

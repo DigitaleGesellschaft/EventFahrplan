@@ -10,10 +10,11 @@ import android.content.pm.PackageManager.MATCH_ALL
 import android.content.pm.PackageManager.MATCH_DEFAULT_ONLY
 import android.content.res.Configuration
 import android.net.Uri
-import android.os.Build.VERSION.SDK_INT
-import android.os.Build.VERSION_CODES.M
 import android.view.LayoutInflater
 import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
+import android.widget.Toast.LENGTH_SHORT
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -43,9 +44,8 @@ fun Context.getDefaultBrowsableApp(): String? {
     val intent = Intent(Intent.ACTION_VIEW, uri).apply {
         addCategory(Intent.CATEGORY_BROWSABLE)
     }
-    val flags = if (SDK_INT < M) 0 else MATCH_DEFAULT_ONLY
     return packageManager
-        .resolveActivity(intent, flags)
+        .resolveActivity(intent, MATCH_DEFAULT_ONLY)
         ?.activityInfo
         ?.packageName
 }
@@ -59,9 +59,8 @@ fun Context.getBrowserApps(): List<String> {
     val intent = Intent(Intent.ACTION_MAIN).apply {
         addCategory(Intent.CATEGORY_APP_BROWSER)
     }
-    val flags = if (SDK_INT < M) 0 else MATCH_ALL
     return packageManager
-        .queryIntentActivities(intent, flags)
+        .queryIntentActivities(intent, MATCH_ALL)
         .map { it.activityInfo.packageName }
 }
 
@@ -72,7 +71,7 @@ fun Context.openLinkWithApp(link: String, packageName: String) {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK
     }
     startActivity(intent) {
-        Toast.makeText(this, R.string.share_error_activity_not_found, Toast.LENGTH_SHORT).show()
+        showToast(R.string.share_error_activity_not_found, showShort = true)
     }
 }
 
@@ -90,6 +89,16 @@ fun Context.openMap(locationText: String) {
     val encodedLocationText = Uri.encode(locationText)
     val uri = "geo:0,0?q=$encodedLocationText".toUri()
     startActivity(Intent(Intent.ACTION_VIEW).apply { data = uri }) {
-        Toast.makeText(this, R.string.share_error_activity_not_found, Toast.LENGTH_SHORT).show()
+        showToast(R.string.share_error_activity_not_found, showShort = true)
     }
+}
+
+fun Context.showToast(@StringRes message: Int, showShort: Boolean) {
+    val duration = if (showShort) LENGTH_SHORT else LENGTH_LONG
+    Toast.makeText(this, message, duration).show()
+}
+
+fun Context.showToast(message: String, showShort: Boolean) {
+    val duration = if (showShort) LENGTH_SHORT else LENGTH_LONG
+    Toast.makeText(this, message, duration).show()
 }

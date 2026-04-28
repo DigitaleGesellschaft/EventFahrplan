@@ -56,6 +56,7 @@ import nerd.tuxmobil.fahrplan.congress.designsystem.colors.LocalColorScheme
 import nerd.tuxmobil.fahrplan.congress.designsystem.dividers.DividerHorizontal
 import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconDecorative
 import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconDecorativeVector
+import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconVideoRecording
 import nerd.tuxmobil.fahrplan.congress.designsystem.indicators.ripple
 import nerd.tuxmobil.fahrplan.congress.designsystem.menues.DropdownMenu
 import nerd.tuxmobil.fahrplan.congress.designsystem.menues.DropdownMenuItem
@@ -207,8 +208,8 @@ private fun SessionCardLayout(data: SessionCardData) {
                         verticalAlignment = CenterVertically,
                     ) {
                         if (data.recordingOptOut?.value == true) {
-                            VideoRecordingIcon(
-                                property = data.recordingOptOut,
+                            IconVideoRecording(
+                                contentDescription = data.recordingOptOut.contentDescription,
                             )
                         }
                         if (data.hasAlarm) {
@@ -451,19 +452,6 @@ private fun TrackName(
 }
 
 @Composable
-private fun VideoRecordingIcon(
-    property: SessionProperty<Boolean>,
-    modifier: Modifier = Modifier,
-) {
-    IconDecorative(
-        modifier = modifier.size(dimensionResource(R.dimen.session_drawable_icon_size)),
-        icon = R.drawable.ic_video_recording_unavailable,
-        contentDescription = property.contentDescription,
-        tint = Color.Unspecified,
-    )
-}
-
-@Composable
 private fun AlarmIcon(
     modifier: Modifier = Modifier,
 ) {
@@ -659,7 +647,7 @@ private fun createSessionCardData(
 @Preview("Enough whitespace between speakers and track", "Scenarios")
 @Composable
 private fun SessionCardPreview01() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "",
         speakerNames = stringResource(R.string.placeholder_session_speakers),
@@ -676,7 +664,7 @@ private fun SessionCardPreview01() {
 @Preview("Not enough whitespace between speakers and track", "Scenarios")
 @Composable
 private fun SessionCardPreview02() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "",
         speakerNames = stringResource(R.string.placeholder_session_speakers),
@@ -693,7 +681,7 @@ private fun SessionCardPreview02() {
 @Preview("Enough whitespace between title and track", "Scenarios")
 @Composable
 private fun SessionCardPreview03() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "",
         speakerNames = "",
@@ -710,7 +698,7 @@ private fun SessionCardPreview03() {
 @Preview("Not enough whitespace between title and track", "Scenarios")
 @Composable
 private fun SessionCardPreview04() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "",
         speakerNames = "",
@@ -727,7 +715,7 @@ private fun SessionCardPreview04() {
 @Preview("Enough whitespace under title - two lines", "Scenarios")
 @Composable
 private fun SessionCardPreview05() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "",
         speakerNames = "",
@@ -744,7 +732,7 @@ private fun SessionCardPreview05() {
 @Preview("Not enough whitespace under title", "Scenarios")
 @Composable
 private fun SessionCardPreview06() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "",
         speakerNames = "",
@@ -761,7 +749,7 @@ private fun SessionCardPreview06() {
 @Preview("Ellipsize title", "Scenarios")
 @Composable
 private fun SessionCardPreview07() {
-    createSessionCard(
+    SessionCard(
         title = "Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Very loooooooooooooooooooooooooooooooooooong title",
         subtitle = "",
         speakerNames = "",
@@ -778,7 +766,7 @@ private fun SessionCardPreview07() {
 @Preview("Ellipsize subtitle", "Scenarios")
 @Composable
 private fun SessionCardPreview08() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = "Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Lorem ipsum dolor. Very loooooooooooooooooooooooooooooooooooong subtitle",
         speakerNames = "",
@@ -795,7 +783,7 @@ private fun SessionCardPreview08() {
 @Preview("Ellipsize speakers", "Scenarios")
 @Composable
 private fun SessionCardPreview09() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = stringResource(R.string.placeholder_session_subtitle),
         speakerNames = "Stephen A. Ridley, Ernest Ridley, Conan Ridley, Bridget Ridley, Frank Ridley, Barbara Ridley",
@@ -812,7 +800,7 @@ private fun SessionCardPreview09() {
 @Preview("Ellipsize track name", "Scenarios")
 @Composable
 private fun SessionCardPreview10() {
-    createSessionCard(
+    SessionCard(
         title = stringResource(R.string.placeholder_session_title),
         subtitle = stringResource(R.string.placeholder_session_subtitle),
         speakerNames = stringResource(R.string.placeholder_session_speakers),
@@ -826,9 +814,8 @@ private fun SessionCardPreview10() {
     )
 }
 
-@Suppress("kotlin:S107")
 @Composable
-private fun createSessionCard(
+private fun SessionCard(
     title: String,
     subtitle: String = "",
     speakerNames: String = "",

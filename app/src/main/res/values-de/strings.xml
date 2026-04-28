@@ -72,6 +72,7 @@
     <string name="session_details_section_title_track">Themenfeld</string>
     <string name="session_details_section_title_session_online">Event online</string>
     <string name="session_details_section_title_links">Links</string>
+    <string name="session_details_section_title_identifiers">Identifikatoren</string>
     <string name="choose_alarm_time">Wähle die Alarmzeit</string>
     <string name="reminders">Alarme</string>
     <string name="usage">Hinweis:\n\nLange auf Vortrag tippen, um einen Alarm einzustellen.</string>
@@ -210,10 +211,11 @@
     <!-- Session list item -->
     <string name="session_list_item_duration_text"><xliff:g example="45" id="duration">%d</xliff:g> min.</string>
     <string name="session_list_item_duration_content_description">Dauer: <xliff:g example="45" id="duration">%d</xliff:g> Minuten</string>
+    <string name="session_list_item_end_time_content_description">Ende: <xliff:g example="19:00" id="endTime">%s</xliff:g></string>
     <string name="session_list_item_favored_content_description">favorisiert</string>
     <string name="session_list_item_not_favored_content_description">nicht favorisiert</string>
     <string name="session_list_item_room_content_description">Raum: <xliff:g example="Main hall" id="room">%s</xliff:g></string>
-    <string name="session_list_item_start_time_content_description">Startzeit: <xliff:g example="16:30" id="startTime">%s</xliff:g></string>
+    <string name="session_list_item_start_time_content_description">Anfang: <xliff:g example="16:30" id="startTime">%s</xliff:g></string>
     <string name="session_list_item_title_content_description">Titel: <xliff:g example="Berlin stories" id="title">%s</xliff:g></string>
     <string name="session_list_item_subtitle_content_description">Untertitel: <xliff:g example="News from Berlin" id="subtitle">%s</xliff:g></string>
     <string name="session_list_item_track_content_description">Track: <xliff:g example="Security" id="trackName">%s</xliff:g></string>
@@ -257,6 +259,7 @@
     <string name="alarms_item_fires_at_content_description">
         Löst aus um: <xliff:g example="16:20" id="alarmTime">%s</xliff:g>
     </string>
+    <string name="alarms_delete_all_alarms">Alle Alarme löschen?</string>
 
     <!-- Validation errors -->
     <string name="validation_error_invalid_url">
@@ -306,6 +309,8 @@
     <string name="search_filter_not_recorded">Nicht aufgezeichnet</string>
     <string name="search_filter_recorded">Aufgezeichnet</string>
     <string name="search_filter_within_speaker_names">In Namen von Sprecher*innen</string>
+    <string name="search_filter_within_title_subtitle">In Titel/Untertitel</string>
+    <string name="search_filter_within_track_name">In Themenfeld</string>
 
     <!-- Engelsystem URL error -->
     <string name="engelsystem_url_error_title">Fehler bei Einlesen der <xliff:g example="Engelsystem" id="engelsystemAlias">%s</xliff:g> JSON Export URL</string>

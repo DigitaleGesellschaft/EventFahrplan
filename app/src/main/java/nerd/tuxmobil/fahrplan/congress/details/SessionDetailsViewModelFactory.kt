@@ -1,17 +1,20 @@
 package nerd.tuxmobil.fahrplan.congress.details
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import info.metadude.android.eventfahrplan.commons.logging.Logging
 import nerd.tuxmobil.fahrplan.congress.BuildConfig
+import nerd.tuxmobil.fahrplan.congress.R
 import nerd.tuxmobil.fahrplan.congress.alarms.AlarmServices
 import nerd.tuxmobil.fahrplan.congress.commons.BuildConfigProvider
 import nerd.tuxmobil.fahrplan.congress.commons.DateFormatterDelegate
-import nerd.tuxmobil.fahrplan.congress.commons.ExternalNavigation
-import nerd.tuxmobil.fahrplan.congress.commons.ResourceResolving
+import nerd.tuxmobil.fahrplan.congress.commons.ExternalNavigator
+import nerd.tuxmobil.fahrplan.congress.commons.ResourceResolver
 import nerd.tuxmobil.fahrplan.congress.navigation.C3nav
 import nerd.tuxmobil.fahrplan.congress.navigation.RoomForC3NavConverter
 import nerd.tuxmobil.fahrplan.congress.notifications.NotificationHelper
+import nerd.tuxmobil.fahrplan.congress.preferences.DefaultSettingsRepository
 import nerd.tuxmobil.fahrplan.congress.repositories.AppExecutionContext
 import nerd.tuxmobil.fahrplan.congress.repositories.AppRepository
 import nerd.tuxmobil.fahrplan.congress.roomstates.RoomStateFormatter
@@ -25,23 +28,23 @@ import nerd.tuxmobil.fahrplan.congress.utils.SessionPropertiesFormatter
 import nerd.tuxmobil.fahrplan.congress.utils.SessionUrlComposer
 
 internal class SessionDetailsViewModelFactory(
-
-    private val appRepository: AppRepository,
-    private val resourceResolving: ResourceResolving,
-    private val alarmServices: AlarmServices,
-    private val notificationHelper: NotificationHelper,
-    private val externalNavigation: ExternalNavigation,
-    private val defaultEngelsystemRoomName: String,
-    private val customEngelsystemRoomName: String
-
+    private val context: Context,
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        val resourceResolving = ResourceResolver(context)
+        val appRepository = AppRepository
+        val alarmServices = AlarmServices.newInstance(context, appRepository)
+        val notificationHelper = NotificationHelper(context)
+        val externalNavigation = ExternalNavigator(context)
+        val defaultEngelsystemRoomName = AppRepository.ENGELSYSTEM_ROOM_NAME
+        val customEngelsystemRoomName = context.getString(R.string.engelsystem_shifts_alias)
         val logging = Logging.get()
         val buildConfigProvision = BuildConfigProvider()
         @Suppress("UNCHECKED_CAST")
         return SessionDetailsViewModel(
             repository = appRepository,
+            settingsRepository = DefaultSettingsRepository(context),
             executionContext = AppExecutionContext,
             logging = logging,
             buildConfigProvision = buildConfigProvision,
@@ -50,7 +53,7 @@ internal class SessionDetailsViewModelFactory(
             externalNavigation = externalNavigation,
             sessionDetailsParameterFactory = SessionDetailsParameterFactory(
                 repository = appRepository,
-                markupLanguage = ServerBackendType.getMarkupLanguage(buildConfigProvision.serverBackendType),
+                markupLanguage = buildConfigProvision.serverBackendType.markupLanguage,
                 sessionPropertiesFormatting = SessionPropertiesFormatter(resourceResolving),
                 contentDescriptionFormatting = ContentDescriptionFormatter(resourceResolving),
                 formattingDelegate = DateFormatterDelegate,
@@ -60,6 +63,7 @@ internal class SessionDetailsViewModelFactory(
                 customEngelsystemRoomName = customEngelsystemRoomName,
             ),
             selectedSessionParameterFactory = SelectedSessionParameterFactory(
+                buildConfigProvision = buildConfigProvision,
                 indoorNavigation = C3nav(BuildConfig.C3NAV_URL, RoomForC3NavConverter()),
                 feedbackUrlComposition = FeedbackUrlComposer(),
                 defaultEngelsystemRoomName = defaultEngelsystemRoomName,

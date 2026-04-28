@@ -60,6 +60,7 @@ data class ColorScheme(
     // Custom colors
     val listItemPrefixSymbol: Color,
     val divider: Color,
+    val multiChoiceBackground: Color,
     val searchBarDivider: Color,
     val sessionListHeaderDayDate: Color,
     val textLink: Color,
@@ -87,6 +88,11 @@ data class ColorScheme(
     val scheduleChangeCanceled: Color,
     val scheduleChangeChanged: Color,
     val scheduleChangeBarBackground: Color,
+    val searchFilterChipContainer: Color,
+    val searchFilterChipSelectedContainer: Color,
+    val searchFilterChipLabel: Color,
+    val searchFilterChipSelectedLabel: Color,
+    val searchFilterChipBorder: Color,
 )
 
 internal fun ColorScheme.toMaterial3ColorScheme(): Material3ColorScheme {

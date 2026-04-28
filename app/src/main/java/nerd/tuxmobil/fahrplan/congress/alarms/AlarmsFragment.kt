@@ -3,30 +3,22 @@ package nerd.tuxmobil.fahrplan.congress.alarms
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.annotation.IdRes
-import androidx.compose.runtime.collectAsState
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.fragment.compose.content
-import androidx.lifecycle.Lifecycle.State.RESUMED
-import nerd.tuxmobil.fahrplan.congress.R
 import nerd.tuxmobil.fahrplan.congress.base.OnSessionItemClickListener
-import nerd.tuxmobil.fahrplan.congress.commons.ResourceResolver
-import nerd.tuxmobil.fahrplan.congress.commons.ResourceResolving
-import nerd.tuxmobil.fahrplan.congress.commons.ScreenNavigation
 import nerd.tuxmobil.fahrplan.congress.contract.BundleKeys
+import nerd.tuxmobil.fahrplan.congress.designsystem.themes.EventFahrplanTheme
 import nerd.tuxmobil.fahrplan.congress.extensions.replaceFragment
 import nerd.tuxmobil.fahrplan.congress.extensions.withArguments
-import nerd.tuxmobil.fahrplan.congress.repositories.AppRepository
+import nerd.tuxmobil.fahrplan.congress.sidepane.OnSidePaneCloseListener
+import nerd.tuxmobil.fahrplan.congress.utils.ActivityHelper.navigateUp
 
-class AlarmsFragment : Fragment(), MenuProvider {
+class AlarmsFragment : Fragment() {
 
     companion object {
         const val FRAGMENT_TAG = "ALARMS_FRAGMENT_TAG"
@@ -46,34 +38,12 @@ class AlarmsFragment : Fragment(), MenuProvider {
         }
     }
 
-    private lateinit var appRepository: AppRepository
-    private lateinit var resourceResolving: ResourceResolving
-    private lateinit var alarmServices: AlarmServices
-    private val viewModel: AlarmsViewModel by viewModels {
-        AlarmsViewModelFactory(appRepository, resourceResolving, alarmServices)
-    }
+    private val viewModel: AlarmsViewModel by viewModels { AlarmsViewModelFactory(requireContext()) }
     private var sidePane = false
-    private var onSessionItemClickListener: OnSessionItemClickListener? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        appRepository = AppRepository
-        resourceResolving = ResourceResolver(context)
-        alarmServices = AlarmServices.newInstance(context, appRepository)
-        viewModel.screenNavigation = ScreenNavigation { sessionId ->
-            onSessionItemClickListener?.onSessionItemClick(sessionId)
-        }
-        onSessionItemClickListener = try {
-            context as OnSessionItemClickListener
-        } catch (_: ClassCastException) {
-            error("$context must implement OnSessionItemClickListener")
-        }
-    }
-
-    override fun onDetach() {
-        onSessionItemClickListener = null
-        viewModel.screenNavigation = null
-        super.onDetach()
+        require(context is OnSessionItemClickListener) { "$context must implement OnSessionItemClickListener" }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +51,6 @@ class AlarmsFragment : Fragment(), MenuProvider {
         arguments?.let {
             sidePane = it.getBoolean(BundleKeys.SIDEPANE)
         }
-        requireActivity().addMenuProvider(this, this, RESUMED)
     }
 
     override fun onCreateView(
@@ -89,22 +58,26 @@ class AlarmsFragment : Fragment(), MenuProvider {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = content {
-        AlarmsScreen(
-            state = viewModel.alarmsState.collectAsState().value,
-            showInSidePane = sidePane,
-        )
+        EventFahrplanTheme {
+            AlarmsScreen(
+                viewModel = viewModel,
+                showInSidePane = sidePane,
+                onBack = ::navigateBack,
+                onNavigateToSession = ::navigateToSession,
+            )
+        }
     }.also { it.isClickable = true }
 
-    override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-        menuInflater.inflate(R.menu.alarms_menu, menu)
+    private fun navigateBack() {
+        val activity = requireActivity()
+        when (val listener = activity as? OnSidePaneCloseListener) {
+            null -> activity.navigateUp()
+            else -> listener.onSidePaneClose(FRAGMENT_TAG)
+        }
     }
 
-    override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        when (menuItem.itemId) {
-            R.id.menu_item_delete_all_alarms -> viewModel.onDeleteAllClick()
-            else -> return false
-        }
-        return true
+    private fun navigateToSession(sessionId: String) {
+        (requireContext() as OnSessionItemClickListener).onSessionItemClick(sessionId)
     }
 
 }

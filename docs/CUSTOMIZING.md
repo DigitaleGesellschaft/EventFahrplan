@@ -7,7 +7,7 @@ This document describes how to create your own app for an event.
 The following information is required to configure the app for your event.
 This list is for your preparation. Step 3 guides you through where to enter the information.
 
-- Schedule URL which provides Frab compatible XML
+- Schedule URL which provides Frab compatible XML or JSON
 - Session URL template, e.g. `https://awesome-event.com/2021/events/%1$s.html`
 - Server backend type, one of: `pentabarf`, `frab`, `pretalx`, `pretalx-dgwk`
 - Google Play URL, e.g. `https://play.google.com/store/apps/details?id=com.awesome.event.schedule`
@@ -54,18 +54,19 @@ In some of the steps it is the easiest to copy and adapt configuration settings,
 2. Create a new branch for your event, e.g. `awesome-event-2021`
 3. Add a new product flavor in *app/build.gradle* e.g. `awesome2021` and the corresponding folder e.g. `app/src/awesome2021`
 4. Configure all required properties in your flavor (`applicationId`, `versionName`, `buildConfigField`, `resValue`)
-5. Enable showing the app disclaimer via `SHOW_APP_DISCLAIMER` to acknowledge its origin
-6. Add a new signing config in `app/gradle.properties`
-7. Customize texts for the languages which you want to offer (`values/strings.xml`, `values-de/strings.xml`, ...)
-8. Add the name/s (and website/s) of the authors of the logo(s) in `copyright_logo`
-9. Add track resource names in `res/xml/track_resource_names.xml`
-10. Customize track colors in `res/values/colors_congress.xml`
-11. Customize app colors in `res/values/colors.xml`
-12. Verify colors both in light and dark mode (not all screens switch colors!)
-13. Add a launcher icon in different resolutions as `res/mipmap-[...]/ic_launcher.png`
-14. Add a notification icon in different resolutions as `res/drawable-[...]/ic_notification.png`
-15. Add an about dialog logo as `res/drawable/dialog_logo.xml`
-16. Customize bell and video recording icons in `res/drawable/` (optional)
+5. Configure the `SCHEDULE_URL` and `SCHEDULE_FILE_FORMAT` `buildConfigField` properties in your flavor. The latter currently allows the following values: `schedule_v1_xml`, `schedule_v1_json`.
+6. Enable showing the app disclaimer via `SHOW_APP_DISCLAIMER` to acknowledge its origin in your flavor
+7. Add a new signing config in `app/gradle.properties`
+8. Customize texts for the languages which you want to offer (`values/strings.xml`, `values-de/strings.xml`, ...) in your flavor
+9. Add the name/s (and website/s) of the authors of the logo(s) in `copyright_logo`
+10. Add track resource names in `res/xml/track_resource_names.xml` in your flavor
+11. Customize track colors in `res/values/colors_congress.xml` in your flavor - brighter colors in `res/values`, darker colors `res/values-night`
+12. Customize app colors in `res/values/colors.xml` in your flavor - good default colors are defined in `app/src/main`
+13. Verify colors both in light and dark modes
+14. Add a launcher icon in different resolutions as `res/mipmap-[...]/ic_launcher.png` in your flavor
+15. Add a notification icon in different resolutions as `res/drawable-[...]/ic_notification.png` in your flavor
+16. Add an about dialog logo as `res/drawable/dialog_logo.xml` in your flavor
+17. Customize bell and video recording icons in `res/drawable/` (optional) in your flavor
 
 ### 3.1. Customizing illustrations shown at empty screens
 
@@ -148,9 +149,16 @@ open the corresponding session details screen when tapping website URLs. This re
 steps:
 
 1. Add a [digital asset links](https://developer.android.com/training/app-links/configure-assetlinks) file
-   to the domain of the event, e.g. https://myconferen.ce/.well-known/assetlinks.json
+   to the domain of the event, e.g. https://myconferen.ce/.well-known/assetlinks.json.
+   - The server must  respond with `HTTP 200 OK` - otherwise the "open supported links" option will
+     be toggled off by default.
+   - Add separate certificate fingerprints for your Google Play and F-Droid publications if they
+     don't share the same signing key.
+   - Add the certificate fingerprint of your debug key store which becomes handy during development.
 2. Configure the [intent filter pattern](https://developer.android.com/training/app-links/add-applinks)
    in the `AndroidManifest.xml` of your product flavor.
+   - Add `android:autoVerify="true"`. Without `autoVerify`, Android will never enable supported links automatically.
+   - Configure the domain(s), subdomain(s) and path(s) to be handled.
 3. The correct session details might still not open automatically. Check *logcat's* output for error messages.
    You might need to add the missing URL path in `SlugFactory` and `SlugFactoryTest`.
 

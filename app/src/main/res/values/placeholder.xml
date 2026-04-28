@@ -57,6 +57,9 @@
     <string name="placeholder_session_language">
         en
     </string>
+    <string name="placeholder_session_languages">
+        en, de
+    </string>
     <string name="placeholder_session_day">
         Today
     </string>
@@ -85,11 +88,6 @@
     </string>
     <string name="placeholder_session_id">
         ID: 5193
-    </string>
-
-    <!-- Separators -->
-    <string name="placeholder_day_separator_title">
-        Day 2
     </string>
 
 </resources>

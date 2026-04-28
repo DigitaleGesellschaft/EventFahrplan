@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.WindowInsetsSides.Companion.Bottom
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -26,7 +28,6 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -37,19 +38,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import info.metadude.android.eventfahrplan.commons.flow.observe
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import nerd.tuxmobil.fahrplan.congress.R
-import nerd.tuxmobil.fahrplan.congress.commons.DaySeparatorProperty
 import nerd.tuxmobil.fahrplan.congress.commons.MultiDevicePreview
+import nerd.tuxmobil.fahrplan.congress.commons.ScreenMetrics
+import nerd.tuxmobil.fahrplan.congress.commons.createSearchResultPreviewData
 import nerd.tuxmobil.fahrplan.congress.designsystem.buttons.ButtonIcon
 import nerd.tuxmobil.fahrplan.congress.designsystem.buttons.ButtonOutlined
 import nerd.tuxmobil.fahrplan.congress.designsystem.chips.FilterChip
@@ -57,6 +61,7 @@ import nerd.tuxmobil.fahrplan.congress.designsystem.dividers.DividerHorizontal
 import nerd.tuxmobil.fahrplan.congress.designsystem.headers.HeaderDayDate
 import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconDecorative
 import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconDecorativeVector
+import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconVideoRecording
 import nerd.tuxmobil.fahrplan.congress.designsystem.screenstates.Loading
 import nerd.tuxmobil.fahrplan.congress.designsystem.screenstates.NoData
 import nerd.tuxmobil.fahrplan.congress.designsystem.search.InputField
@@ -106,7 +111,7 @@ fun SearchScreen(
         }
     }
 
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     SearchContent(
         state = state,
@@ -290,7 +295,7 @@ private fun SearchResultList(
 ) {
     LazyColumn(
         state = rememberLazyListState(),
-        contentPadding = WindowInsets.navigationBars.only(Bottom).asPaddingValues(),
+        contentPadding = WindowInsets.navigationBars.union(WindowInsets.ime).only(Bottom).asPaddingValues(),
     ) {
         itemsIndexed(parameters) { index, parameter ->
             when (parameter) {
@@ -308,7 +313,7 @@ private fun SearchResultList(
                     )
                     val next = parameters.getOrNull(index + 1)
                     if (index < parameters.size - 1 && next is SearchResult) {
-                        DividerHorizontal(Modifier.padding(horizontal = 12.dp))
+                        DividerHorizontal()
                     }
                 }
             }
@@ -320,42 +325,118 @@ private fun SearchResultList(
 }
 
 @Composable
-private fun SearchResultItem(
+fun SearchResultItem(
     searchResult: SearchResult,
     modifier: Modifier = Modifier,
 ) {
-    ListItem(
-        modifier = modifier,
-        overlineContent = {
-            TextOverline(
-                modifier = Modifier.semantics {
-                    contentDescription = searchResult.startsAt.contentDescription
-                },
-                text = searchResult.startsAt.value,
-                color = searchResult.startsAt.tenseType.color(),
-            )
+    Row(
+        modifier = modifier.clearAndSetSemantics {
+            contentDescription = createContentDescription(searchResult)
         },
-        headlineContent = {
-            TextHeadlineContent(
-                modifier = Modifier.semantics {
-                    contentDescription = searchResult.title.contentDescription
-                },
-                text = searchResult.title.value,
-                color = searchResult.title.tenseType.color(),
-            )
-        },
-        supportingContent = {
-            if (searchResult.speakerNames.value.isNotEmpty()) {
-                TextSupportingContent(
-                    modifier = Modifier.semantics {
-                        contentDescription = searchResult.speakerNames.contentDescription
-                    },
-                    text = searchResult.speakerNames.value,
-                    color = searchResult.speakerNames.tenseType.color(),
+        verticalAlignment = CenterVertically,
+    ) {
+        ListItem(
+            modifier = Modifier
+                .padding(ScreenMetrics.listItemPaddingValues())
+                .weight(1f),
+            overlineContent = {
+                val text = buildString {
+                    if (searchResult.startsAt.value.isNotEmpty()) {
+                        append(searchResult.startsAt.value)
+                    }
+                    if (searchResult.startsAt.value.isNotEmpty() && searchResult.endsAt.value.isNotEmpty()) {
+                        append(" - ")
+                    }
+                    if (searchResult.endsAt.value.isNotEmpty()) {
+                        append(searchResult.endsAt.value)
+                    }
+                    if (searchResult.roomName.value.isNotEmpty()) {
+                        append(" | ${searchResult.roomName.value}")
+                    }
+                }
+                TextOverline(
+                    text = text,
+                    color = searchResult.startsAt.tenseType.color(),
                 )
+            },
+            headlineContent = {
+                TextHeadlineContent(
+                    text = searchResult.title.value,
+                    fontWeight = Bold,
+                    color = searchResult.title.tenseType.color(),
+                )
+            },
+            supportingContent = {
+                Column {
+                    val text = buildString {
+                        if (searchResult.speakerNames.value.isNotEmpty()) {
+                            append(searchResult.speakerNames.value.uppercase())
+                        }
+                        if (searchResult.speakerNames.value.isNotEmpty() && searchResult.languages.value.isNotEmpty()) {
+                            append(" ")
+                        }
+                        if (searchResult.languages.value.isNotEmpty()) {
+                            append("[${searchResult.languages.value.uppercase()}]")
+                        }
+                    }
+                    if (text.isNotEmpty()) {
+                        TextSupportingContent(
+                            text = text,
+                            color = searchResult.speakerNames.tenseType.color(),
+                        )
+                    }
+                }
+            },
+        )
+        if (searchResult.recordingOptOut?.value == true) {
+            IconVideoRecording(Modifier.padding(start = 8.dp, bottom = 10.dp, end = ScreenMetrics.END_PADDING))
+        }
+    }
+}
+
+private fun createContentDescription(searchResult: SearchResult) = with(searchResult) {
+    buildString {
+        if (startsAt.contentDescription.isNotEmpty()) {
+            append(startsAt.contentDescription)
+        }
+        if (endsAt.contentDescription.isNotEmpty()) {
+            if (isNotEmpty()) append(", ")
+            append(endsAt.contentDescription)
+        }
+        if (roomName.contentDescription.isNotEmpty()) {
+            if (isNotEmpty()) append(", ")
+            append(roomName.contentDescription)
+        }
+        if (title.contentDescription.isNotEmpty()) {
+            if (isNotEmpty()) {
+                append(". ")
             }
-        },
-    )
+            append(title.contentDescription)
+        }
+        if (speakerNames.contentDescription.isNotEmpty() || languages.contentDescription.isNotEmpty()) {
+            if (isNotEmpty()) {
+                append(". ")
+            }
+            if (speakerNames.contentDescription.isNotEmpty()) {
+                append(speakerNames.contentDescription)
+            }
+            if (languages.contentDescription.isNotEmpty()) {
+                if (speakerNames.contentDescription.isNotEmpty()) {
+                    append(", ")
+                }
+                append(languages.contentDescription)
+            }
+        }
+        if (recordingOptOut?.value == true) {
+            val desc = recordingOptOut.contentDescription
+            if (desc.isNotEmpty()) {
+                if (isNotEmpty()) {
+                    append(". ")
+                }
+                append(desc)
+            }
+        }
+    }
 }
 
 @Composable
@@ -392,7 +473,7 @@ private fun SearchHistoryList(
     }
     LazyColumn(
         state = rememberLazyListState(),
-        contentPadding = WindowInsets.navigationBars.only(Bottom).asPaddingValues(),
+        contentPadding = WindowInsets.navigationBars.union(WindowInsets.ime).only(Bottom).asPaddingValues(),
     ) {
         itemsIndexed(searchQueries) { index, searchQuery ->
             SearchHistoryItem(
@@ -440,43 +521,7 @@ private fun SearchContentPreview() {
             state = SearchUiState(
                 query = "Lorem ipsum",
                 filters = searchFilters(),
-                resultsState = SearchResults(
-                    persistentListOf(
-                        Separator(
-                            DaySeparatorProperty(
-                                value = "DAY 1 - 12/27/2024",
-                                contentDescription = "Day 1 - December 27, 2024",
-                            )
-                        ),
-                        SearchResult(
-                            id = "1",
-                            title = SearchResultProperty("Lorem ipsum dolor sit amet", ""),
-                            speakerNames = SearchResultProperty("Hedy Llamar", ""),
-                            startsAt = SearchResultProperty("December 27, 2024 10:00", ""),
-                        ),
-                        SearchResult(
-                            id = "2",
-                            title = SearchResultProperty("Dolor sit amet", ""),
-                            speakerNames = SearchResultProperty("Hedy Llamar", ""),
-                            startsAt = SearchResultProperty("December 27, 2024 12:00", ""),
-                        ),
-                        Separator(
-                            DaySeparatorProperty(
-                                value = "DAY 2 - 12/28/2024",
-                                contentDescription = "Day 2 - December 28, 2024",
-                            )
-                        ),
-                        SearchResult(
-                            id = "3",
-                            title = SearchResultProperty(
-                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                                ""
-                            ),
-                            speakerNames = SearchResultProperty("Jane Doe", ""),
-                            startsAt = SearchResultProperty("December 28, 2024 18:30", "")
-                        ),
-                    )
-                )
+                resultsState = SearchResults(createSearchResultPreviewData()),
             ),
             onViewEvent = { },
         )
@@ -539,5 +584,7 @@ private fun searchFilters(): ImmutableList<SearchFilterUiState> {
         SearchFilterUiState(label = R.string.search_filter_has_alarm, selected = false),
         SearchFilterUiState(label = R.string.search_filter_not_recorded, selected = false),
         SearchFilterUiState(label = R.string.search_filter_within_speaker_names, selected = false),
+        SearchFilterUiState(label = R.string.search_filter_within_title_subtitle, selected = false),
+        SearchFilterUiState(label = R.string.search_filter_within_track_name, selected = false),
     )
 }

@@ -16,22 +16,49 @@ import nerd.tuxmobil.fahrplan.congress.TestExecutionContext
 import nerd.tuxmobil.fahrplan.congress.alarms.AlarmServices
 import nerd.tuxmobil.fahrplan.congress.commons.BuildConfigProvision
 import nerd.tuxmobil.fahrplan.congress.commons.ExternalNavigation
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsDestination.PickAlarmTime
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.AddToCalendar
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.NavigateTo
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.NavigateToRoom
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.OpenFeedback
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.RequestPostNotificationsPermission
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.RequestScheduleExactAlarmsPermission
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.ShareJson
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.ShareSimple
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsEffect.ShowNotificationsDisabledError
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsParameter.SessionDetails
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsProperty.MarkupLanguage.Markdown
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsState.Loading
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsState.Success
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnAddAlarm
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnAddAlarmWithChecks
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnAddFavoriteClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnAddToCalendarClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnDeleteAlarmClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnDeleteFavoriteClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnNavigateToRoomClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnOpenFeedbackClick
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnSessionLinkClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnShareClick
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnShareToChaosflixClick
 import nerd.tuxmobil.fahrplan.congress.models.Alarm
 import nerd.tuxmobil.fahrplan.congress.models.Meta
 import nerd.tuxmobil.fahrplan.congress.models.Room
 import nerd.tuxmobil.fahrplan.congress.models.Session
 import nerd.tuxmobil.fahrplan.congress.navigation.IndoorNavigation
 import nerd.tuxmobil.fahrplan.congress.notifications.NotificationHelper
+import nerd.tuxmobil.fahrplan.congress.preferences.Settings
+import nerd.tuxmobil.fahrplan.congress.preferences.SettingsRepository
 import nerd.tuxmobil.fahrplan.congress.repositories.AppRepository
 import nerd.tuxmobil.fahrplan.congress.roomstates.RoomStateFormatting
 import nerd.tuxmobil.fahrplan.congress.sharing.JsonSessionFormat
 import nerd.tuxmobil.fahrplan.congress.sharing.SimpleSessionFormat
 import nerd.tuxmobil.fahrplan.congress.utils.FeedbackUrlComposition
+import nerd.tuxmobil.fahrplan.congress.utils.ScheduleFileFormat
+import nerd.tuxmobil.fahrplan.congress.utils.ScheduleFileFormat.SCHEDULE_V1_XML
+import nerd.tuxmobil.fahrplan.congress.utils.ServerBackendType
+import nerd.tuxmobil.fahrplan.congress.utils.ServerBackendType.PRETALX
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.kotlin.any
@@ -50,503 +77,551 @@ class SessionDetailsViewModelTest {
         const val SAMPLE_FEEDBACK_URL = "http://conference.net/feedback"
     }
 
-    @Test
-    fun `sessionDetailsState does emit Loading`() = runTest {
-        val repository = createRepository(selectedSessionFlow = emptyFlow())
-        val viewModel = createViewModel(
-            repository = repository,
-            feedbackUrlComposition = SupportedFeedbackUrlComposer,
-            indoorNavigation = SupportedIndoorNavigation,
-        )
-        viewModel.sessionDetailsState.test {
-            assertThat(awaitItem()).isEqualTo(Loading)
-            expectNoEvents()
+    @Nested
+    inner class UiState {
+
+        @Test
+        fun `uiState emits SessionDetailsUiState(Loading) when no repository emits`() = runTest {
+            val repository = createRepository(selectedSessionFlow = emptyFlow())
+            val settingsRepository = createSettingsRepository(settingsStream = emptyFlow())
+            val viewModel = createViewModel(
+                repository = repository,
+                settingsRepository = settingsRepository,
+                feedbackUrlComposition = SupportedFeedbackUrlComposer,
+                indoorNavigation = SupportedIndoorNavigation,
+            )
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SessionDetailsUiState(Loading))
+                expectNoEvents()
+            }
         }
+
+        @Test
+        fun `uiState does emit SessionDetailsUiState(Loading) when only selectedSessionFlow emits`() = runTest {
+            val session = Session(sessionId = "S1")
+            val repository = createRepository(selectedSessionFlow = flowOf(session))
+            val settingsRepository = createSettingsRepository(settingsStream = emptyFlow())
+            val viewModel = createViewModel(
+                repository = repository,
+                settingsRepository = settingsRepository,
+                feedbackUrlComposition = SupportedFeedbackUrlComposer,
+                indoorNavigation = SupportedIndoorNavigation,
+            )
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SessionDetailsUiState(Loading))
+                expectNoEvents()
+            }
+        }
+
+        @Test
+        fun `uiState does emit SessionDetailsUiState(Loading) when only settingsStream emits`() = runTest {
+            val repository = createRepository(selectedSessionFlow = emptyFlow())
+            val settingsRepository = createSettingsRepository(settingsStream = flowOf(Settings()))
+            val viewModel = createViewModel(
+                repository = repository,
+                settingsRepository = settingsRepository,
+                feedbackUrlComposition = SupportedFeedbackUrlComposer,
+                indoorNavigation = SupportedIndoorNavigation,
+            )
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SessionDetailsUiState(Loading))
+                expectNoEvents()
+            }
+        }
+
+        @Test
+        fun `uiState does emit SessionDetailsUiState(Success) when both repositories emit`() = runTest {
+            val session = Session(sessionId = "S1")
+            val repository = createRepository(selectedSessionFlow = flowOf(session))
+            val settingsRepository = createSettingsRepository(settingsStream = flowOf(Settings()))
+            val viewModel = createViewModel(
+                repository = repository,
+                settingsRepository = settingsRepository,
+                feedbackUrlComposition = SupportedFeedbackUrlComposer,
+                indoorNavigation = SupportedIndoorNavigation,
+            )
+            viewModel.uiState.test {
+                val actual = awaitItem()
+                assertThat(actual).isInstanceOf(SessionDetailsUiState::class.java)
+                assertThat(actual.sessionDetailsState).isInstanceOf(Success::class.java)
+                expectNoEvents()
+            }
+        }
+
     }
 
-    @Test
-    fun `sessionDetailsState does emit Success`() = runTest {
-        val session = Session(sessionId = "S1")
-        val repository = createRepository(selectedSessionFlow = flowOf(session))
-        val viewModel = createViewModel(
-            repository = repository,
-            feedbackUrlComposition = SupportedFeedbackUrlComposer,
-            indoorNavigation = SupportedIndoorNavigation,
-        )
-        viewModel.sessionDetailsState.test {
-            assertThat(awaitItem()).isInstanceOf(Success::class.java)
-            expectNoEvents()
+    @Nested
+    inner class OnViewEvent {
+
+        @Test
+        fun `OnOpenFeedbackClick emits OpenFeedback effect`() = runTest {
+            val repository = createRepository()
+            val fakeFeedbackUrlComposition = mock<FeedbackUrlComposition> {
+                on { getFeedbackUrl(any()) } doReturn SAMPLE_FEEDBACK_URL
+            }
+            val viewModel = createViewModel(repository, feedbackUrlComposition = fakeFeedbackUrlComposition)
+            viewModel.onViewEvent(OnOpenFeedbackClick)
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isInstanceOf(OpenFeedback::class.java)
+                assertThat((effect as OpenFeedback).uri).isEqualTo(SAMPLE_FEEDBACK_URL.toUri())
+            }
+            verifyInvokedOnce(repository).loadSelectedSession()
         }
+
+        @Test
+        fun `OnShareClick emits ShareSimple effect with formatted session`() = runTest {
+            val repository = createRepository()
+            val fakeSessionFormat = mock<SimpleSessionFormat> {
+                on { format(any(), anyOrNull(), any()) } doReturn "An example session"
+            }
+            val viewModel = createViewModel(repository, simpleSessionFormat = fakeSessionFormat)
+            viewModel.onViewEvent(OnShareClick)
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isInstanceOf(ShareSimple::class.java)
+                assertThat((effect as ShareSimple).formattedSession).isEqualTo("An example session")
+            }
+            verifyInvokedOnce(repository).loadSelectedSession()
+            verifyInvokedOnce(repository).readMeta()
+        }
+
+        @Test
+        fun `OnShareToChaosflixClick emits ShareJson effect with formatted session`() = runTest {
+            val repository = createRepository()
+            val fakeSessionFormat = mock<JsonSessionFormat> {
+                on { format(any<Session>()) } doReturn """{ "session" : "example" }"""
+            }
+            val viewModel = createViewModel(repository, jsonSessionFormat = fakeSessionFormat)
+            viewModel.onViewEvent(OnShareToChaosflixClick)
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isInstanceOf(ShareJson::class.java)
+                assertThat((effect as ShareJson).formattedSession).isEqualTo("""{ "session" : "example" }""")
+            }
+            verifyInvokedOnce(repository).loadSelectedSession()
+        }
+
+        @Test
+        fun `OnAddToCalendarClick emits AddToCalendar effect`() = runTest {
+            val repository = createRepository(selectedSession = Session("S2"))
+            val viewModel = createViewModel(repository)
+            viewModel.onViewEvent(OnAddToCalendarClick)
+            verifyInvokedOnce(repository).loadSelectedSession()
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isInstanceOf(AddToCalendar::class.java)
+                assertThat((effect as AddToCalendar).session).isEqualTo(Session("S2"))
+            }
+        }
+
+        @Test
+        fun `OnAddFavoriteClick flags the session as a favorite and persists it`() {
+            val actualSession = Session(sessionId = "S3", isHighlight = false)
+            val expectedSession = Session(sessionId = "S3", isHighlight = true)
+            val repository = createRepository(selectedSession = actualSession)
+            val viewModel = createViewModel(repository)
+            viewModel.onViewEvent(OnAddFavoriteClick)
+            verifyInvokedOnce(repository).loadSelectedSession()
+            verifyInvokedOnce(repository).updateHighlight(expectedSession)
+        }
+
+        @Test
+        fun `OnDeleteFavoriteClick unflags the session as a favorite and persists it`() {
+            val actualSession = Session(sessionId = "S4", isHighlight = true)
+            val expectedSession = Session(sessionId = "S4", isHighlight = false)
+            val repository = createRepository(selectedSession = actualSession)
+            val viewModel = createViewModel(repository)
+            viewModel.onViewEvent(OnDeleteFavoriteClick)
+            verifyInvokedOnce(repository).loadSelectedSession()
+            verifyInvokedOnce(repository).updateHighlight(expectedSession)
+        }
+
     }
 
-    @Test
-    fun `selectedSessionParameter does not emit SelectedSessionParameter`() = runTest {
-        val repository = createRepository(selectedSessionFlow = emptyFlow())
-        val viewModel = createViewModel(
-            repository = repository,
-            feedbackUrlComposition = SupportedFeedbackUrlComposer,
-            indoorNavigation = SupportedIndoorNavigation,
-        )
-        viewModel.selectedSessionParameter.test {
-            awaitComplete()
+    @Nested
+    inner class Alarms {
+
+        @Test
+        fun `canAddAlarms invokes canScheduleExactAlarms property`() {
+            val repository = createRepository()
+            val alarmServices = mock<AlarmServices>()
+            val viewModel = createViewModel(repository = repository, alarmServices = alarmServices)
+            viewModel.canAddAlarms()
+            verifyInvokedOnce(alarmServices).canScheduleExactAlarms
         }
+
+        @Test
+        fun `OnAddAlarmWithChecks emits NavigateTo(PickAlarmTime) effect`() = runTest {
+            val notificationHelper = mock<NotificationHelper> {
+                on { notificationsEnabled } doReturn true
+            }
+            val alarmServices = mock<AlarmServices> {
+                on { canScheduleExactAlarms } doReturn true
+            }
+            val repository = createRepository()
+            val viewModel = createViewModel(
+                repository = repository,
+                notificationHelper = notificationHelper,
+                alarmServices = alarmServices,
+            )
+            viewModel.onViewEvent(OnAddAlarmWithChecks)
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isEqualTo(NavigateTo(PickAlarmTime))
+            }
+            verifyInvokedOnce(notificationHelper).notificationsEnabled
+            verifyInvokedOnce(alarmServices).canScheduleExactAlarms
+        }
+
+        @Test
+        fun `OnAddAlarmWithChecks emits RequestScheduleExactAlarmsPermission effect`() = runTest {
+            val notificationHelper = mock<NotificationHelper> {
+                on { notificationsEnabled } doReturn true
+            }
+            val alarmServices = mock<AlarmServices> {
+                on { canScheduleExactAlarms } doReturn false
+            }
+            val repository = createRepository()
+            val viewModel = createViewModel(
+                repository = repository,
+                notificationHelper = notificationHelper,
+                alarmServices = alarmServices,
+                runsAtLeastOnAndroidTiramisu = true, // not relevant
+            )
+            viewModel.onViewEvent(OnAddAlarmWithChecks)
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isEqualTo(RequestScheduleExactAlarmsPermission)
+            }
+            verifyInvokedOnce(notificationHelper).notificationsEnabled
+            verifyInvokedOnce(alarmServices).canScheduleExactAlarms
+        }
+
+        @Test
+        fun `OnAddAlarmWithChecks emits RequestPostNotificationsPermission effect as of Android 13`() =
+            runTest {
+                val notificationHelper = mock<NotificationHelper> {
+                    on { notificationsEnabled } doReturn false
+                }
+                val repository = createRepository()
+                val viewModel = createViewModel(
+                    repository = repository,
+                    notificationHelper = notificationHelper,
+                    runsAtLeastOnAndroidTiramisu = true,
+                )
+                viewModel.onViewEvent(OnAddAlarmWithChecks)
+                viewModel.effects.test {
+                    val effect = awaitItem()
+                    assertThat(effect).isEqualTo(RequestPostNotificationsPermission)
+                }
+                verifyInvokedOnce(notificationHelper).notificationsEnabled
+            }
+
+        @Test
+        fun `OnAddAlarmWithChecks emits ShowNotificationsDisabledError effect before Android 13`() =
+            runTest {
+                val notificationHelper = mock<NotificationHelper> {
+                    on { notificationsEnabled } doReturn false
+                }
+                val repository = createRepository()
+                val viewModel = createViewModel(
+                    repository = repository,
+                    notificationHelper = notificationHelper,
+                    runsAtLeastOnAndroidTiramisu = false,
+                )
+                viewModel.onViewEvent(OnAddAlarmWithChecks)
+                viewModel.effects.test {
+                    val effect = awaitItem()
+                    assertThat(effect).isEqualTo(ShowNotificationsDisabledError)
+                }
+            }
+
+        @Test
+        fun `OnAddAlarm persists the alarm creation`() {
+            val repository = createRepository(selectedSession = Session("S5"))
+            val alarmServices = mock<AlarmServices>()
+            val viewModel = createViewModel(repository, alarmServices = alarmServices)
+            viewModel.onViewEvent(OnAddAlarm(alarmTime = 5))
+            verifyInvokedOnce(repository).loadSelectedSession()
+            verifyInvokedOnce(alarmServices).addSessionAlarm(any(), any())
+        }
+
+        @Test
+        fun `OnDeleteAlarmClick persists the alarm deletion`() {
+            val repository = createRepository(
+                selectedSession = Session("S6"),
+                alarms = emptyList()
+            )
+            val alarmServices = mock<AlarmServices>()
+            val viewModel = createViewModel(repository, alarmServices = alarmServices)
+            viewModel.onViewEvent(OnDeleteAlarmClick)
+            verifyInvokedOnce(repository).loadSelectedSession()
+            verifyInvokedOnce(alarmServices).deleteSessionAlarm(any())
+        }
+
     }
 
-    @Test
-    fun `selectedSessionParameter emits SelectedSessionParameter built from some session`() = runTest {
-        val session = Session(sessionId = "S1")
-        val repository = createRepository(selectedSessionFlow = flowOf(session))
-        val viewModel = createViewModel(
-            repository = repository,
-            feedbackUrlComposition = SupportedFeedbackUrlComposer,
-            indoorNavigation = SupportedIndoorNavigation,
-        )
-        viewModel.selectedSessionParameter.test {
-            assertThat(awaitItem()).isInstanceOf(SelectedSessionParameter::class.java)
-            awaitComplete()
+    @Nested
+    inner class Navigation {
+
+        @Test
+        fun `OnNavigateToRoomClick emits NavigateToRoom effect`() = runTest {
+            val repository = createRepository(
+                selectedSession = Session(
+                    sessionId = "S1",
+                    roomName = "Garden",
+                    roomIdentifier = "",
+                )
+            )
+            val viewModel = createViewModel(
+                repository = repository,
+                indoorNavigation = SupportedIndoorNavigation,
+            )
+            viewModel.onViewEvent(OnNavigateToRoomClick)
+            viewModel.effects.test {
+                val effect = awaitItem()
+                assertThat(effect).isInstanceOf(NavigateToRoom::class.java)
+                assertThat((effect as NavigateToRoom).uri).isEqualTo("https://c3nav.foo/garden".toUri())
+            }
+            verifyInvokedOnce(repository).loadSelectedSession()
         }
+
+        @Test
+        fun `OnSessionLinkClick invokes openLink if no default browseable app nor browser apps are present`() =
+            runTest {
+                val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+                var invokedLink = ""
+                val externalNavigation = object : ExternalNavigation {
+                    override fun openMap(locationText: String) = throw NotImplementedError()
+                    override fun getBrowserApps() = emptyList<String>()
+                    override fun getDefaultBrowsableApp() = null
+                    override fun openLink(link: String) {
+                        invokedLink = link
+                    }
+
+                    override fun openLinkWithApp(link: String, packageName: String) =
+                        throw NotImplementedError()
+                }
+                val viewModel = createViewModel(
+                    externalNavigation = externalNavigation,
+                )
+                viewModel.onViewEvent(OnSessionLinkClick(link))
+                assertThat(invokedLink).isEqualTo(link)
+            }
+
+        @Test
+        fun `OnSessionLinkClick invokes openLink if the only browser apps is the app itself`() =
+            runTest {
+                val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+                var invokedLink = ""
+                val buildConfigProvision = mock<BuildConfigProvision> {
+                    on { packageName } doReturn "com.example.app"
+                }
+                val externalNavigation = object : ExternalNavigation {
+                    override fun openMap(locationText: String) = throw NotImplementedError()
+                    override fun getDefaultBrowsableApp() = null
+                    override fun getBrowserApps() = listOf("com.example.app")
+
+                    override fun openLink(link: String) {
+                        invokedLink = link
+                    }
+
+                    override fun openLinkWithApp(link: String, packageName: String) =
+                        throw NotImplementedError()
+                }
+                val viewModel = createViewModel(
+                    buildConfigProvision = buildConfigProvision,
+                    externalNavigation = externalNavigation,
+                )
+                viewModel.onViewEvent(OnSessionLinkClick(link))
+                assertThat(invokedLink).isEqualTo(link)
+            }
+
+        @Test
+        fun `OnSessionLinkClick invokes openLinkWithApp if at least one other browser app is present`() =
+            runTest {
+                val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+                var invokedLink = ""
+                var invokedPackage = ""
+                val buildConfigProvision = mock<BuildConfigProvision> {
+                    on { packageName } doReturn "com.example.app"
+                }
+                val externalNavigation = object : ExternalNavigation {
+                    override fun openMap(locationText: String) = throw NotImplementedError()
+                    override fun getDefaultBrowsableApp() = null
+                    override fun getBrowserApps() = listOf("com.example.browser")
+                    override fun openLink(link: String) = throw NotImplementedError()
+                    override fun openLinkWithApp(link: String, packageName: String) {
+                        invokedLink = link
+                        invokedPackage = packageName
+                    }
+                }
+                val viewModel = createViewModel(
+                    buildConfigProvision = buildConfigProvision,
+                    externalNavigation = externalNavigation,
+                )
+                viewModel.onViewEvent(OnSessionLinkClick(link))
+                assertThat(invokedLink).isEqualTo(link)
+                assertThat(invokedPackage).isEqualTo("com.example.browser")
+            }
+
+        @Test
+        fun `OnSessionLinkClick invokes openLinkWithApp if a default browseable app is present`() =
+            runTest {
+                val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
+                var invokedLink = ""
+                var invokedPackage = ""
+                val buildConfigProvision = mock<BuildConfigProvision> {
+                    on { packageName } doReturn "com.example.app"
+                }
+                val externalNavigation = object : ExternalNavigation {
+                    override fun openMap(locationText: String) = throw NotImplementedError()
+                    override fun getDefaultBrowsableApp() = "com.example.browser2"
+                    override fun getBrowserApps() =
+                        listOf("com.example.browser1", "com.example.browser2")
+
+                    override fun openLink(link: String) = throw NotImplementedError()
+                    override fun openLinkWithApp(link: String, packageName: String) {
+                        invokedLink = link
+                        invokedPackage = packageName
+                    }
+                }
+                val viewModel = createViewModel(
+                    buildConfigProvision = buildConfigProvision,
+                    externalNavigation = externalNavigation,
+                )
+                viewModel.onViewEvent(OnSessionLinkClick(link))
+                assertThat(invokedLink).isEqualTo(link)
+                assertThat(invokedPackage).isEqualTo("com.example.browser2")
+            }
+
     }
 
-    @Test
-    fun `openFeedback() posts to openFeedback`() = runTest {
-        val repository = createRepository()
-        val fakeFeedbackUrlComposition = mock<FeedbackUrlComposition> {
-            on { getFeedbackUrl(any()) } doReturn SAMPLE_FEEDBACK_URL
-        }
-        val viewModel = createViewModel(repository, feedbackUrlComposition = fakeFeedbackUrlComposition)
-        viewModel.openFeedback()
-        viewModel.openFeedBack.test {
-            assertThat(awaitItem()).isEqualTo(SAMPLE_FEEDBACK_URL.toUri())
-        }
-        verifyInvokedOnce(repository).loadSelectedSession()
-    }
+    @Nested
+    inner class RoomState {
 
-    @Test
-    fun `share() posts to shareSimple what simpleSessionFormat returns`() = runTest {
-        val repository = createRepository()
-        val fakeSessionFormat = mock<SimpleSessionFormat> {
-            on { format(any(), anyOrNull(), any()) } doReturn "An example session"
+        @Test
+        fun `roomStateMessage emits unknown when feature is disabled`() = runTest {
+            val repository = createRepository(
+                selectedSessionFlow = emptyFlow(),
+                roomStatesFlow = emptyFlow()
+            )
+            val logging = mock<Logging>()
+            val viewModel = createViewModel(
+                repository = repository,
+                logging = logging,
+                buildConfigProvision = mock<BuildConfigProvision>(), // disables room states feature
+                roomStateFormatting = UnknownRoomStateFormatter
+            )
+            viewModel.roomStateMessage.test {
+                assertThat(awaitItem()).isEqualTo("Unknown")
+            }
+            verifyInvokedOnce(repository).selectedSession // once for sessionDetailsState
+            verifyInvokedNever(repository).roomStates
+            verifyInvokedNever(logging).e(any(), any())
         }
-        val viewModel = createViewModel(repository, simpleSessionFormat = fakeSessionFormat)
-        viewModel.share()
-        viewModel.shareSimple.test {
-            assertThat(awaitItem()).isEqualTo("An example session")
-        }
-        verifyInvokedOnce(repository).loadSelectedSession()
-        verifyInvokedOnce(repository).readMeta()
-    }
 
-    @Test
-    fun `shareToChaosflix() posts to shareJson what jsonSessionFormat returns`() = runTest {
-        val repository = createRepository()
-        val fakeSessionFormat = mock<JsonSessionFormat> {
-            on { format(any<Session>()) } doReturn """{ "session" : "example" }"""
+        @Test
+        fun `roomStateMessage emits unknown state message per default`() = runTest {
+            val repository = createRepository(
+                selectedSessionFlow = emptyFlow(),
+                roomStatesFlow = emptyFlow()
+            )
+            val logging = mock<Logging>()
+            val viewModel = createViewModel(
+                repository = repository,
+                logging = logging,
+                buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
+                roomStateFormatting = UnknownRoomStateFormatter
+            )
+            viewModel.roomStateMessage.test {
+                assertThat(awaitItem()).isEqualTo("Unknown")
+            }
+            verify(repository, times(2)).selectedSession // once for sessionDetailsState
+            verifyInvokedOnce(repository).roomStates
+            verifyInvokedNever(logging).e(any(), any())
         }
-        val viewModel = createViewModel(repository, jsonSessionFormat = fakeSessionFormat)
-        viewModel.shareToChaosflix()
-        viewModel.shareJson.test {
-            assertThat(awaitItem()).isEqualTo("""{ "session" : "example" }""")
-        }
-        verifyInvokedOnce(repository).loadSelectedSession()
-    }
 
-    @Test
-    fun `addToCalendar() posts to addToCalendar`() = runTest {
-        val repository = createRepository(selectedSession = Session("S2"))
-        val viewModel = createViewModel(repository)
-        viewModel.addToCalendar()
-        verifyInvokedOnce(repository).loadSelectedSession()
-        viewModel.addToCalendar.test {
-            assertThat(awaitItem()).isEqualTo(Session("S2"))
-        }
-    }
-
-    @Test
-    fun `favorSession() flags the session as a favorite and persists it`() {
-        val actualSession = Session(sessionId = "S3", isHighlight = false)
-        val expectedSession = Session(sessionId = "S3", isHighlight = true)
-        val repository = createRepository(selectedSession = actualSession)
-        val viewModel = createViewModel(repository)
-        viewModel.favorSession()
-        verifyInvokedOnce(repository).loadSelectedSession()
-        verifyInvokedOnce(repository).updateHighlight(expectedSession)
-    }
-
-    @Test
-    fun `unfavorSession() unflags the session as a favorite and persists it`() {
-        val actualSession = Session(sessionId = "S4", isHighlight = true)
-        val expectedSession = Session(sessionId = "S4", isHighlight = false)
-        val repository = createRepository(selectedSession = actualSession)
-        val viewModel = createViewModel(repository)
-        viewModel.unfavorSession()
-        verifyInvokedOnce(repository).loadSelectedSession()
-        verifyInvokedOnce(repository).updateHighlight(expectedSession)
-    }
-
-    @Test
-    fun `canAddAlarms invokes canScheduleExactAlarms property`() {
-        val repository = createRepository()
-        val alarmServices = mock<AlarmServices>()
-        val viewModel = createViewModel(repository = repository, alarmServices = alarmServices)
-        viewModel.canAddAlarms()
-        verifyInvokedOnce(alarmServices).canScheduleExactAlarms
-    }
-
-    @Test
-    fun `addAlarmWithChecks() posts to showAlarmTimePicker`() = runTest {
-        val notificationHelper = mock<NotificationHelper> {
-            on { notificationsEnabled } doReturn true
-        }
-        val alarmServices = mock<AlarmServices> {
-            on { canScheduleExactAlarms } doReturn true
-        }
-        val repository = createRepository()
-        val viewModel = createViewModel(
-            repository = repository,
-            notificationHelper = notificationHelper,
-            alarmServices = alarmServices,
-        )
-        viewModel.addAlarmWithChecks()
-        viewModel.showAlarmTimePicker.test {
-            assertThat(awaitItem()).isEqualTo(Unit)
-        }
-        verifyInvokedOnce(notificationHelper).notificationsEnabled
-        verifyInvokedOnce(alarmServices).canScheduleExactAlarms
-    }
-
-    @Test
-    fun `addAlarmWithChecks() posts to requestScheduleExactAlarmsPermission`() = runTest {
-        val notificationHelper = mock<NotificationHelper> {
-            on { notificationsEnabled } doReturn true
-        }
-        val alarmServices = mock<AlarmServices> {
-            on { canScheduleExactAlarms } doReturn false
-        }
-        val repository = createRepository()
-        val viewModel = createViewModel(
-            repository = repository,
-            notificationHelper = notificationHelper,
-            alarmServices = alarmServices,
-            runsAtLeastOnAndroidTiramisu = true, // not relevant
-        )
-        viewModel.addAlarmWithChecks()
-        viewModel.requestScheduleExactAlarmsPermission.test {
-            assertThat(awaitItem()).isEqualTo(Unit)
-        }
-        verifyInvokedOnce(notificationHelper).notificationsEnabled
-        verifyInvokedOnce(alarmServices).canScheduleExactAlarms
-    }
-
-    @Test
-    fun `addAlarmWithChecks() posts to requestPostNotificationsPermission as of Android 13`() = runTest {
-        val notificationHelper = mock<NotificationHelper> {
-            on { notificationsEnabled } doReturn false
-        }
-        val repository = createRepository()
-        val viewModel = createViewModel(
-            repository = repository,
-            notificationHelper = notificationHelper,
-            runsAtLeastOnAndroidTiramisu = true,
-        )
-        viewModel.addAlarmWithChecks()
-        viewModel.requestPostNotificationsPermission.test {
-            assertThat(awaitItem()).isEqualTo(Unit)
-        }
-        verifyInvokedOnce(notificationHelper).notificationsEnabled
-    }
-
-    @Test
-    fun `addAlarmWithChecks() posts to notificationsDisabled before Android 13`() = runTest {
-        val notificationHelper = mock<NotificationHelper> {
-            on { notificationsEnabled } doReturn false
-        }
-        val repository = createRepository()
-        val viewModel = createViewModel(
-            repository = repository,
-            notificationHelper = notificationHelper,
-            runsAtLeastOnAndroidTiramisu = false,
-        )
-        viewModel.addAlarmWithChecks()
-        viewModel.notificationsDisabled.test {
-            assertThat(awaitItem()).isEqualTo(Unit)
-        }
-    }
-
-    @Test
-    fun `addAlarm() persists the alarm deletion`() {
-        val repository = createRepository(selectedSession = Session("S5"))
-        val alarmServices = mock<AlarmServices>()
-        val viewModel = createViewModel(repository, alarmServices = alarmServices)
-        viewModel.addAlarm(alarmTime = 5)
-        verifyInvokedOnce(repository).loadSelectedSession()
-        verifyInvokedOnce(alarmServices).addSessionAlarm(any(), any())
-    }
-
-    @Test
-    fun `deleteAlarm() persists the alarm deletion`() {
-        val repository = createRepository(
-            selectedSession = Session("S6"),
-            alarms = emptyList()
-        )
-        val alarmServices = mock<AlarmServices>()
-        val viewModel = createViewModel(repository, alarmServices = alarmServices)
-        viewModel.deleteAlarm()
-        verifyInvokedOnce(repository).loadSelectedSession()
-        verifyInvokedOnce(alarmServices).deleteSessionAlarm(any())
-    }
-
-    @Test
-    fun `closeDetails() posts to closeDetails`() = runTest {
-        val repository = createRepository()
-        val viewModel = createViewModel(repository)
-        viewModel.closeDetails()
-        viewModel.closeDetails.test {
-            assertThat(awaitItem()).isEqualTo(Unit)
-        }
-    }
-
-    @Test
-    fun `navigateToRoom() posts to navigateToRoom`() = runTest {
-        val repository = createRepository(
-            selectedSession = Session(
+        @Test
+        fun `roomStateMessage emits room state message when room names match`() = runTest {
+            val session = Session(
                 sessionId = "S1",
-                roomName = "Garden",
-                roomIdentifier = "",
+                roomName = "Main hall",
             )
-        )
-        val viewModel = createViewModel(
-            repository = repository,
-            indoorNavigation = SupportedIndoorNavigation,
-        )
-        viewModel.navigateToRoom()
-        viewModel.navigateToRoom.test {
-            assertThat(awaitItem()).isEqualTo("https://c3nav.foo/garden".toUri())
-        }
-        verifyInvokedOnce(repository).loadSelectedSession()
-    }
-
-    @Test
-    fun `OnSessionLinkClick invokes openLink if no default browseable app nor browser apps are present`() = runTest {
-        val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
-        var invokedLink = ""
-        val externalNavigation = object : ExternalNavigation {
-            override fun openMap(locationText: String) = throw NotImplementedError()
-            override fun getBrowserApps() = emptyList<String>()
-            override fun getDefaultBrowsableApp() = null
-            override fun openLink(link: String) {
-                invokedLink = link
-            }
-
-            override fun openLinkWithApp(link: String, packageName: String) =
-                throw NotImplementedError()
-        }
-        val viewModel = createViewModel(
-            externalNavigation = externalNavigation,
-        )
-        viewModel.onViewEvent(OnSessionLinkClick(link))
-        assertThat(invokedLink).isEqualTo(link)
-    }
-
-    @Test
-    fun `OnSessionLinkClick invokes openLink if the only browser apps is the app itself`() =
-        runTest {
-            val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
-            var invokedLink = ""
-            val buildConfigProvision = mock<BuildConfigProvision> {
-                on { packageName } doReturn "com.example.app"
-            }
-            val externalNavigation = object : ExternalNavigation {
-                override fun openMap(locationText: String) = throw NotImplementedError()
-                override fun getDefaultBrowsableApp() = null
-                override fun getBrowserApps() = listOf("com.example.app")
-
-                override fun openLink(link: String) {
-                    invokedLink = link
-                }
-
-                override fun openLinkWithApp(link: String, packageName: String) =
-                    throw NotImplementedError()
-            }
+            val roomState = State.TOO_FULL
+            val repository = createRepository(
+                selectedSessionFlow = flowOf(session),
+                roomStatesFlow = flowOf(Result.success(listOf(FosdemRoom("Main hall", roomState))))
+            )
+            val logging = mock<Logging>()
             val viewModel = createViewModel(
-                buildConfigProvision = buildConfigProvision,
-                externalNavigation = externalNavigation,
+                repository = repository,
+                logging = logging,
+                buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
+                roomStateFormatting = CrowdedRoomStateFormatter
             )
-            viewModel.onViewEvent(OnSessionLinkClick(link))
-            assertThat(invokedLink).isEqualTo(link)
+            viewModel.roomStateMessage.test {
+                assertThat(awaitItem()).isEqualTo("Crowded")
+            }
+            verify(repository, times(2)).selectedSession // once for sessionDetailsState
+            verifyInvokedOnce(repository).roomStates
+            verifyInvokedNever(logging).e(any(), any())
         }
 
-    @Test
-    fun `OnSessionLinkClick invokes openLinkWithApp if at least one other browser app is present`() =
-        runTest {
-            val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
-            var invokedLink = ""
-            var invokedPackage = ""
-            val buildConfigProvision = mock<BuildConfigProvision> {
-                on { packageName } doReturn "com.example.app"
-            }
-            val externalNavigation = object : ExternalNavigation {
-                override fun openMap(locationText: String) = throw NotImplementedError()
-                override fun getDefaultBrowsableApp() = null
-                override fun getBrowserApps() = listOf("com.example.browser")
-                override fun openLink(link: String) = throw NotImplementedError()
-                override fun openLinkWithApp(link: String, packageName: String) {
-                    invokedLink = link
-                    invokedPackage = packageName
+        @Test
+        fun `roomStateMessage emits unknown state message when room names do not match`() =
+            runTest {
+                val session = Session(
+                    sessionId = "S1",
+                    roomName = "Unknown room",
+                )
+                val roomState = State.TOO_FULL
+                val repository = createRepository(
+                    selectedSessionFlow = flowOf(session),
+                    roomStatesFlow = flowOf(Result.success(listOf(FosdemRoom("Main hall", roomState))))
+                )
+                val logging = mock<Logging>()
+                val viewModel = createViewModel(
+                    repository = repository,
+                    logging = logging,
+                    buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
+                    roomStateFormatting = UnknownRoomStateFormatter
+                )
+                viewModel.roomStateMessage.test {
+                    assertThat(awaitItem()).isEqualTo("Unknown")
                 }
+                verify(repository, times(2)).selectedSession // once for sessionDetailsState
+                verifyInvokedOnce(repository).roomStates
+                verifyInvokedOnce(logging).e(any(), any())
             }
-            val viewModel = createViewModel(
-                buildConfigProvision = buildConfigProvision,
-                externalNavigation = externalNavigation,
-            )
-            viewModel.onViewEvent(OnSessionLinkClick(link))
-            assertThat(invokedLink).isEqualTo(link)
-            assertThat(invokedPackage).isEqualTo("com.example.browser")
-        }
-    @Test
-    fun `OnSessionLinkClick invokes openLinkWithApp if a default browseable app is present`() =
-        runTest {
-            val link = "https://events.ccc.de/congress/2025/hub/event/detail/opening-ceremony"
-            var invokedLink = ""
-            var invokedPackage = ""
-            val buildConfigProvision = mock<BuildConfigProvision> {
-                on { packageName } doReturn "com.example.app"
-            }
-            val externalNavigation = object : ExternalNavigation {
-                override fun openMap(locationText: String) = throw NotImplementedError()
-                override fun getDefaultBrowsableApp() = "com.example.browser2"
-                override fun getBrowserApps() = listOf("com.example.browser1", "com.example.browser2")
-                override fun openLink(link: String) = throw NotImplementedError()
-                override fun openLinkWithApp(link: String, packageName: String) {
-                    invokedLink = link
-                    invokedPackage = packageName
+
+        @Test
+        fun `roomStateMessage emits failure state message when room states cannot be fetched`() =
+            runTest {
+                val session = Session(
+                    sessionId = "S1",
+                    roomName = "Unknown room",
+                )
+                val repository = createRepository(
+                    selectedSessionFlow = flowOf(session),
+                    roomStatesFlow = flowOf(Result.failure(RuntimeException()))
+                )
+                val logging = mock<Logging>()
+                val viewModel = createViewModel(
+                    repository = repository,
+                    logging = logging,
+                    buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
+                    roomStateFormatting = UnknownRoomStateFormatter
+                )
+                viewModel.roomStateMessage.test {
+                    assertThat(awaitItem()).isEqualTo("Failure")
                 }
+                verify(repository, times(2)).selectedSession // once for sessionDetailsState
+                verifyInvokedOnce(repository).roomStates
+                verifyInvokedOnce(logging).e(any(), any())
             }
-            val viewModel = createViewModel(
-                buildConfigProvision = buildConfigProvision,
-                externalNavigation = externalNavigation,
-            )
-            viewModel.onViewEvent(OnSessionLinkClick(link))
-            assertThat(invokedLink).isEqualTo(link)
-            assertThat(invokedPackage).isEqualTo("com.example.browser2")
-        }
 
-    @Test
-    fun `roomStateMessage emits unknown when feature is disabled`() = runTest {
-        val repository = createRepository(
-            selectedSessionFlow = emptyFlow(),
-            roomStatesFlow = emptyFlow()
-        )
-        val logging = mock<Logging>()
-        val viewModel = createViewModel(
-            repository = repository,
-            logging = logging,
-            buildConfigProvision = mock<BuildConfigProvision>(), // disables room states feature
-            roomStateFormatting = UnknownRoomStateFormatter
-        )
-        viewModel.roomStateMessage.test {
-            assertThat(awaitItem()).isEqualTo("Unknown")
-        }
-        verify(repository, times(2)).selectedSession // once for sessionDetailsState
-        verifyInvokedNever(repository).roomStates
-        verifyInvokedNever(logging).e(any(), any())
-    }
-
-    @Test
-    fun `roomStateMessage emits unknown state message per default`() = runTest {
-        val repository = createRepository(
-            selectedSessionFlow = emptyFlow(),
-            roomStatesFlow = emptyFlow()
-        )
-        val logging = mock<Logging>()
-        val viewModel = createViewModel(
-            repository = repository,
-            logging = logging,
-            buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
-            roomStateFormatting = UnknownRoomStateFormatter
-        )
-        viewModel.roomStateMessage.test {
-            assertThat(awaitItem()).isEqualTo("Unknown")
-        }
-        verify(repository, times(3)).selectedSession // once for sessionDetailsState
-        verifyInvokedOnce(repository).roomStates
-        verifyInvokedNever(logging).e(any(), any())
-    }
-
-    @Test
-    fun `roomStateMessage emits room state message when room names match`() = runTest {
-        val session = Session(
-            sessionId = "S1",
-            roomName = "Main hall",
-        )
-        val roomState = State.TOO_FULL
-        val repository = createRepository(
-            selectedSessionFlow = flowOf(session),
-            roomStatesFlow = flowOf(Result.success(listOf(FosdemRoom("Main hall", roomState))))
-        )
-        val logging = mock<Logging>()
-        val viewModel = createViewModel(
-            repository = repository,
-            logging = logging,
-            buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
-            roomStateFormatting = CrowdedRoomStateFormatter
-        )
-        viewModel.roomStateMessage.test {
-            assertThat(awaitItem()).isEqualTo("Crowded")
-        }
-        verify(repository, times(3)).selectedSession // once for sessionDetailsState
-        verifyInvokedOnce(repository).roomStates
-        verifyInvokedNever(logging).e(any(), any())
-    }
-
-    @Test
-    fun `roomStateMessage emits unknown state message when room names do not match`() = runTest {
-        val session = Session(
-            sessionId = "S1",
-            roomName = "Unknown room",
-        )
-        val roomState = State.TOO_FULL
-        val repository = createRepository(
-            selectedSessionFlow = flowOf(session),
-            roomStatesFlow = flowOf(Result.success(listOf(FosdemRoom("Main hall", roomState))))
-        )
-        val logging = mock<Logging>()
-        val viewModel = createViewModel(
-            repository = repository,
-            logging = logging,
-            buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
-            roomStateFormatting = UnknownRoomStateFormatter
-        )
-        viewModel.roomStateMessage.test {
-            assertThat(awaitItem()).isEqualTo("Unknown")
-        }
-        verify(repository, times(3)).selectedSession // once for sessionDetailsState
-        verifyInvokedOnce(repository).roomStates
-        verifyInvokedOnce(logging).e(any(), any())
-    }
-
-    @Test
-    fun `roomStateMessage emits failure state message when room states cannot be fetched`() = runTest {
-        val session = Session(
-            sessionId = "S1",
-            roomName = "Unknown room",
-        )
-        val repository = createRepository(
-            selectedSessionFlow = flowOf(session),
-            roomStatesFlow = flowOf(Result.failure(RuntimeException()))
-        )
-        val logging = mock<Logging>()
-        val viewModel = createViewModel(
-            repository = repository,
-            logging = logging,
-            buildConfigProvision = EnableFosdemRoomStatesBuildConfig,
-            roomStateFormatting = UnknownRoomStateFormatter
-        )
-        viewModel.roomStateMessage.test {
-            assertThat(awaitItem()).isEqualTo("Failure")
-        }
-        verify(repository, times(3)).selectedSession // once for sessionDetailsState
-        verifyInvokedOnce(repository).roomStates
-        verifyInvokedOnce(logging).e(any(), any())
     }
 
     private fun createRepository(
@@ -563,8 +638,15 @@ class SessionDetailsViewModelTest {
         on { readAlarms(any()) } doReturn alarms
     }
 
+    private fun createSettingsRepository(
+        settingsStream: Flow<Settings> = emptyFlow(),
+    ) = mock<SettingsRepository> {
+        on { this.settingsStream } doReturn settingsStream
+    }
+
     private fun createViewModel(
         repository: AppRepository = createRepository(),
+        settingsRepository: SettingsRepository = createSettingsRepository(),
         logging: Logging = mock(),
         buildConfigProvision: BuildConfigProvision = mock(),
         alarmServices: AlarmServices = mock(),
@@ -578,6 +660,7 @@ class SessionDetailsViewModelTest {
         runsAtLeastOnAndroidTiramisu: Boolean = false
     ) = SessionDetailsViewModel(
         repository = repository,
+        settingsRepository = settingsRepository,
         executionContext = TestExecutionContext,
         logging = logging,
         buildConfigProvision = buildConfigProvision,
@@ -600,6 +683,7 @@ class SessionDetailsViewModelTest {
             title = SessionDetailsProperty("", ""),
             subtitle = SessionDetailsProperty("", ""),
             speakerNames = SessionDetailsProperty("", ""),
+            languages = SessionDetailsProperty("", ""),
             abstract = SessionDetailsProperty(Markdown(""), ""),
             description = SessionDetailsProperty(Markdown(""), ""),
             trackName = SessionDetailsProperty("", ""),
@@ -655,9 +739,10 @@ class SessionDetailsViewModelTest {
         override val fosdemRoomStatesPath: String = ""
         override val fosdemRoomStatesUrl: String = ""
         override val scheduleUrl: String = ""
-        override val serverBackendType: String = ""
+        override val scheduleFileFormat: ScheduleFileFormat = SCHEDULE_V1_XML
+        override val serverBackendType: ServerBackendType = PRETALX
         override val enableEngelsystemShifts: Boolean = false
-
+        override val enableChaosflixExport: Boolean = false
     }
 
 }

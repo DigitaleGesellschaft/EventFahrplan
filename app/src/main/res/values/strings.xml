@@ -78,6 +78,7 @@
     <string name="session_details_section_title_track">Subject area</string>
     <string name="session_details_section_title_session_online">Event online</string>
     <string name="session_details_section_title_links">Links</string>
+    <string name="session_details_section_title_identifiers">Identifiers</string>
     <string name="choose_alarm_time">Choose alarm time</string>
     <string name="reminders">Alarms</string>
     <string name="usage">Note:\n\nLong-press on a session to set an alarm.</string>
@@ -88,7 +89,7 @@
 		Kotlin, Google AndroidX, Jetpack Compose, BetterLinkMovementMethod,
 		Email Intent Builder, Engelsystem, Espresso, HTML Converter for Compose Multiplatform,
 		Kotlin Multiplatform Markdown Renderer, Material Components, Moshi, OkHttp,
-		Retrofit, Room states, SnackEngage, ThreeTenBp, TraceDroid
+		Retrofit, Room states, Schedule, SnackEngage, ThreeTenBp, TraceDroid
 	</string>
     <string name="about_data_privacy_statement_german">Data privacy statement (German)</string>
     <string name="about_f_droid_listing">F-Droid listing</string>
@@ -99,7 +100,7 @@
     <string name="copyright_notes" translatable="false">
         Copyright 2013-2026 johnjohndoe.
         \nCopyright 2011-2015 Daniel Dorau.
-        \n\nContributions from 0x5ubt13, Adriano Pereira Junior, Akarsh Seggemu, Александр Рознятовский, aligoush, Andrea Marziali, Andreas Wirth, Andrulko, Andy Scherzinger, Andreas Schildbach, Animesh Verma, bashtian, bjoernb, Björn Olsson Jarl, burned42, ButterflyOfFire, cacarrara, Caio Volpato, Chase, cketti, codingcatgirl, Dominik Stadler, e4ch, entropynil, erebion, ideadapt, isi_ko404, IsoLinearCHiP, Jasper van der Graaf, Joergi, Julius Vitkauskas, koelnkalkverbot, kpc21, Larissa Yasin, lepawa, ligi, lucadelu, Luis Azcuaga, María Arias de Reyna, Mateus Baptista, Matthias Geisler, Matthias Hunstock, Matthias Mair, MichaelRocks, Miguel Beltran, mtpa, Muha Aliss, Nghiem Xuan Hien, NiciDieNase, Noemis, NWuensche, Oguz Yuksel, Omicron, ozgurbaykal, Poschi, Qwertele, Róbert Papp, Robin Janssens, rotrot, Sjors van Mierlo, Smarzaro, Stefan Medack, SubOptimal, Su Jade, taseret, Teeranai.P, Torsten Grote, Victor Herasme, Vladimir Alabov, Yanicka, zadintuvas.
+        \n\nContributions from 0x5ubt13, Adriano Pereira Junior, Akarsh Seggemu, Александр Рознятовский, aligoush, Andrea Marziali, Andreas Wirth, Andrulko, Andy Scherzinger, Andreas Schildbach, Animesh Verma, bashtian, bjoernb, Björn Olsson Jarl, burned42, ButterflyOfFire, cacarrara, Caio Volpato, Chase, cketti, codingcatgirl, Dominik Stadler, e4ch, entropynil, erebion, ideadapt, isi_ko404, IsoLinearCHiP, Jasper van der Graaf, Joergi, Julius Vitkauskas, koelnkalkverbot, kpc21, Larissa Yasin, lepawa, ligi, lucadelu, Luis Azcuaga, María Arias de Reyna, Mateus Baptista, Matthias Geisler, Matthias Hunstock, Matthias Mair, MichaelRocks, Miguel Beltran, mtpa, Muha Aliss, nautilusx, Nghiem Xuan Hien, NiciDieNase, Noemis, NWuensche, Oguz Yuksel, Omicron, ozgurbaykal, Poschi, Qwertele, Róbert Papp, Robin Janssens, rotrot, Sjors van Mierlo, Smarzaro, Stefan Medack, SubOptimal, Su Jade, taseret, tct123, Teeranai.P, Torsten Grote, Victor Herasme, Vladimir Alabov, Yanicka, zadintuvas.
         \n\nPortions copyright 2008-2011 The K-9 Dog Walkers and 2006-2013 the Android Open Source Project.
     </string>
     <string name="today">today</string>
@@ -236,6 +237,7 @@
     <!-- Session list item -->
     <string name="session_list_item_duration_text"><xliff:g example="45" id="duration">%d</xliff:g> min.</string>
     <string name="session_list_item_duration_content_description">Duration: <xliff:g example="45" id="duration">%d</xliff:g> minutes</string>
+    <string name="session_list_item_end_time_content_description">End time: <xliff:g example="19:00" id="endTime">%s</xliff:g></string>
     <string name="session_list_item_favored_content_description">favored</string>
     <string name="session_list_item_not_favored_content_description">not favored</string>
     <string name="session_list_item_room_content_description">Room: <xliff:g example="Main hall" id="room">%s</xliff:g></string>
@@ -285,6 +287,8 @@
     <string name="alarms_item_fires_at_content_description">
         Fires at: <xliff:g example="16:20" id="alarmTime">%s</xliff:g>
     </string>
+    <string name="alarms_delete_all_alarms">Delete all alarms?</string>
+    <string name="alarms_delete_all" translatable="false">@string/dlg_delete_all_favorites_delete_all</string>
 
     <!-- Validation errors -->
     <string name="validation_error_invalid_url">
@@ -335,6 +339,8 @@
     <string name="search_filter_not_recorded">Not recorded</string>
     <string name="search_filter_recorded">Recorded</string>
     <string name="search_filter_within_speaker_names">Within speaker names</string>
+    <string name="search_filter_within_title_subtitle">Within title/subtitle</string>
+    <string name="search_filter_within_track_name">Within subject area</string>
 
     <!-- Engelsystem URL error -->
     <string name="engelsystem_url_error_title">Error parsing <xliff:g example="Engelsystem" id="engelsystemAlias">%s</xliff:g> JSON Export URL</string>

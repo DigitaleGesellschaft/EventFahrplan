@@ -4,13 +4,11 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.widget.Toolbar
 import nerd.tuxmobil.fahrplan.congress.R
 import nerd.tuxmobil.fahrplan.congress.base.AbstractListFragment.OnSessionListClick
 import nerd.tuxmobil.fahrplan.congress.base.BaseActivity
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsActivity
 import nerd.tuxmobil.fahrplan.congress.extensions.applyEdgeToEdgeInsets
-import nerd.tuxmobil.fahrplan.congress.extensions.applyToolbar
 import nerd.tuxmobil.fahrplan.congress.repositories.AppRepository
 
 class ChangeListActivity : BaseActivity(R.layout.activity_generic), OnSessionListClick {
@@ -26,13 +24,7 @@ class ChangeListActivity : BaseActivity(R.layout.activity_generic), OnSessionLis
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val toolbar = requireViewByIdCompat<Toolbar>(R.id.toolbar)
-        applyToolbar(toolbar) {
-            setDisplayHomeAsUpEnabled(true)
-        }
-
-        val rootLayout = requireViewByIdCompat<View>(R.id.root_layout)
-        rootLayout.applyEdgeToEdgeInsets()
+        requireViewByIdCompat<View>(R.id.root_layout).applyEdgeToEdgeInsets()
 
         if (savedInstanceState == null) {
             val fragment = ChangeListFragment.newInstance(sidePane = false)

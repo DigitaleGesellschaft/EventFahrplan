@@ -40,6 +40,7 @@ class SessionDetailsParameterFactoryTest {
                 title = "Session title",
                 subtitle = "Session subtitle",
                 speakers = listOf("Jane Doe", "John Doe"),
+                language = "de, en",
                 abstractt = "Session abstract",
                 description = "Session description",
                 track = "Session track",
@@ -53,6 +54,7 @@ class SessionDetailsParameterFactoryTest {
         assertThat(parameters.title).isEqualTo(SessionDetailsProperty("Session title", ""))
         assertThat(parameters.subtitle).isEqualTo(SessionDetailsProperty("Session subtitle", ""))
         assertThat(parameters.speakerNames).isEqualTo(SessionDetailsProperty("Jane Doe, John Doe", ""))
+        assertThat(parameters.languages).isEqualTo(SessionDetailsProperty("de, en", ""))
         assertThat(parameters.abstract).isEqualTo(SessionDetailsProperty(Markdown("Session abstract"), "Session abstract"))
         assertThat(parameters.description).isEqualTo(SessionDetailsProperty(Markdown("Session description"), "Session description"))
         assertThat(parameters.trackName).isEqualTo(SessionDetailsProperty("Session track", "Session track"))
@@ -116,7 +118,7 @@ class SessionDetailsParameterFactoryTest {
         override fun getFormattedLinks(links: String) = ""
         override fun getFormattedUrl(url: String) = SAMPLE_SESSION_URL
         override fun getFormattedSpeakers(session: Session) = "Jane Doe, John Doe"
-        override fun getLanguageText(session: Session) = ""
+        override fun getLanguageText(session: Session) = "de, en"
         override fun getRoomName(
             roomName: String,
             defaultEngelsystemRoomName: String,
@@ -138,6 +140,7 @@ class SessionDetailsParameterFactoryTest {
         override fun getTrackNameContentDescription(trackName: String) = ""
         override fun getLanguageContentDescription(languageCode: String) = ""
         override fun getStartTimeContentDescription(startTimeText: String) = ""
+        override fun getEndTimeContentDescription(endTimeText: String) = ""
         override fun getStateContentDescription(session: Session, useDeviceTimeZone: Boolean) = ""
         override fun getDaySeparatorContentDescription(dayIndex: Int, formattedDate: String) = ""
     }

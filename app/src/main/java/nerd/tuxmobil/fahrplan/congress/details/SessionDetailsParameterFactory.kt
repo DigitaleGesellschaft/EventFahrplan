@@ -40,6 +40,7 @@ class SessionDetailsParameterFactory(
         )
         val formattedSessionId = sessionPropertiesFormatting.getFormattedSessionId(session.sessionId)
         val formattedSpeakerNames = sessionPropertiesFormatting.getFormattedSpeakers(session)
+        val formattedLanguages = sessionPropertiesFormatting.getLanguageText(session)
         val linksHtml = sessionPropertiesFormatting.getFormattedLinks(session.links)
         val formattedLinks = markdownConversion.markdownLinksToHtmlLinks(linksHtml)
         val formattedRoomName = sessionPropertiesFormatting.getRoomName(
@@ -71,6 +72,10 @@ class SessionDetailsParameterFactory(
             speakerNames = SessionDetailsProperty(
                 value = formattedSpeakerNames,
                 contentDescription = contentDescriptionFormatting.getSpeakersContentDescription(session.speakers.count(), formattedSpeakerNames),
+            ),
+            languages = SessionDetailsProperty(
+                value = formattedLanguages,
+                contentDescription = contentDescriptionFormatting.getLanguageContentDescription(session.language),
             ),
             abstract = SessionDetailsProperty(
                 value = getMarkupProperty(session.abstractt),

@@ -11,18 +11,19 @@ object Config {
 object Android {
     const val buildToolsVersion = "36.0.0"
     const val compileSdkVersion = 35
-    const val minSdkVersion = 21
+    const val minSdkVersion = 23
     const val targetSdkVersion = 35
 }
 
 object Compose {
 
     private object Versions {
-        const val bom = "2025.11.01"
+        const val bom = "2026.03.01"
+        const val material3 = "1.5.0-alpha18"
     }
 
     const val bom = "androidx.compose:compose-bom:${Versions.bom}"
-    const val material = "androidx.compose.material3:material3"
+    const val material = "androidx.compose.material3:material3:${Versions.material3}"
     const val uiTooling = "androidx.compose.ui:ui-tooling"
     const val uiToolingPreview = "androidx.compose.ui:ui-tooling-preview"
 
@@ -31,13 +32,13 @@ object Compose {
 object Plugins {
 
     private object Versions {
-        const val android = "8.13.1"
+        const val android = "8.13.2"
         const val dexcount = "4.0.0"
-        const val kotlin = "2.2.21"
-        const val ksp = "2.3.3"
-        const val sonarQube = "7.1.0.6387"
+        const val kotlin = "2.3.20"
+        const val ksp = "2.3.6"
+        const val sonarQube = "7.2.3.7755"
         const val unMock = "0.9.0"
-        const val versions = "0.53.0"
+        const val versions = "0.54.0"
     }
 
     const val android = "com.android.tools.build:gradle:${Versions.android}"
@@ -54,7 +55,7 @@ object Libs {
 
     private object Versions {
         const val activityCompose = "1.10.1" // compileSdk 36 is required as of 1.11.0
-        const val androidTest = "1.9.0"
+        const val androidTest = "2.0.1"
         const val annotation = "1.9.1"
         const val appCompat = "1.7.1"
         const val betterLinkMovementMethod = "2.2.0"
@@ -65,19 +66,20 @@ object Libs {
         const val engelsystem = "11.0.0"
         const val fragmentCompose = "1.8.9"
         const val htmlConverter = "1.1.0"
-        const val junitJupiter = "5.14.0" // emulators on CI do not run junit 6 https://github.com/mannodermaus/android-junit5/issues/392
-        const val junitPlatform = "1.14.0" // emulators on CI do not run junit 6 https://github.com/mannodermaus/android-junit5/issues/392
+        const val junitJupiter = "5.14.3" // emulators on CI do not run junit 6 https://github.com/mannodermaus/android-junit5/issues/392
+        const val junitPlatform = "1.14.3" // emulators on CI do not run junit 6 https://github.com/mannodermaus/android-junit5/issues/392
         const val kotlinCoroutines = "1.10.2"
-        const val lifecycle = "2.9.4" // minSdk 23 is required as of 2.10.0
-        const val markdownRenderer = "0.38.1"
+        const val lifecycle = "2.10.0"
+        const val markdownRenderer = "0.38.1" // NoSuchMethodError as of 0.39.0, compileSdk 36 is required as of 0.39.1
         const val material = "1.13.0"
         const val materialIconsCore = "1.7.8"
-        const val mockitoKotlin = "6.1.0"
+        const val mockitoKotlin = "6.3.0"
         const val moshi = "1.15.2"
-        const val navigation = "2.9.6"
+        const val navigation = "2.9.7"
         const val okhttp = "5.3.2"
         const val robolectric = "4.3_r2-robolectric-0"
         const val roomStates = "2.0.0"
+        const val schedule = "1.0.0"
         const val snackengage = "0.30"
         const val threeTenBp = "1.7.2"
         const val tracedroid = "3.1"
@@ -120,6 +122,7 @@ object Libs {
     const val okhttpLoggingInterceptor = "com.squareup.okhttp3:logging-interceptor:${Versions.okhttp}"
     const val robolectric = "org.robolectric:android-all:${Versions.robolectric}"
     const val roomStates = "info.metadude.kotlin.library.roomstates:room-states-repositories:${Versions.roomStates}"
+    const val scheduleRepositories = "info.metadude.kotlin.library.schedule:schedule-repositories:${Versions.schedule}"
     const val snackengagePlayrate = "com.github.ligi.snackengage:snackengage-playrate:${Versions.snackengage}"
     const val threeTenBp = "org.threeten:threetenbp:${Versions.threeTenBp}"
     const val tracedroid = "com.github.ligi:tracedroid:${Versions.tracedroid}"

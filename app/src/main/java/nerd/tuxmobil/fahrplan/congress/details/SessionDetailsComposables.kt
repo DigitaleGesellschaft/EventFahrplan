@@ -7,29 +7,37 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides.Companion.Bottom
 import androidx.compose.foundation.layout.WindowInsetsSides.Companion.Horizontal
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
+import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -37,9 +45,9 @@ import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign.Companion.End
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow.Companion.Ellipsis
+import androidx.compose.ui.text.style.TextOverflow.Companion.Visible
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -59,9 +67,15 @@ import nerd.tuxmobil.fahrplan.congress.R
 import nerd.tuxmobil.fahrplan.congress.R.color.text_link_on_light
 import nerd.tuxmobil.fahrplan.congress.R.color.text_link_pressed_background_on_light
 import nerd.tuxmobil.fahrplan.congress.commons.MultiDevicePreview
+import nerd.tuxmobil.fahrplan.congress.commons.ScreenMetrics
+import nerd.tuxmobil.fahrplan.congress.commons.ToolbarMetrics
+import nerd.tuxmobil.fahrplan.congress.commons.useVerticalFloatingToolbar
+import nerd.tuxmobil.fahrplan.congress.designsystem.buttons.ButtonBox
 import nerd.tuxmobil.fahrplan.congress.designsystem.icons.IconDecorative
 import nerd.tuxmobil.fahrplan.congress.designsystem.resources.floatResource
 import nerd.tuxmobil.fahrplan.congress.designsystem.screenstates.Loading
+import nerd.tuxmobil.fahrplan.congress.designsystem.templates.NavigationSection
+import nerd.tuxmobil.fahrplan.congress.designsystem.templates.NavigationSectionWithContent
 import nerd.tuxmobil.fahrplan.congress.designsystem.templates.Scaffold
 import nerd.tuxmobil.fahrplan.congress.designsystem.texts.Text
 import nerd.tuxmobil.fahrplan.congress.designsystem.themes.EventFahrplanTheme
@@ -71,34 +85,111 @@ import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsProperty.MarkupLang
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsProperty.MarkupLanguage.Markdown
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsState.Loading
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsState.Success
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsToolbarAction.AddToCalendar
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsToolbarAction.Alarm
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsToolbarAction.Favorite
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsToolbarAction.Feedback
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsToolbarAction.Navigate
+import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsToolbarAction.Share
 import nerd.tuxmobil.fahrplan.congress.details.SessionDetailsViewEvent.OnSessionLinkClick
-import nerd.tuxmobil.fahrplan.congress.extensions.safeContentHorizontalAndBottomPadding
 import nerd.tuxmobil.fahrplan.congress.extensions.toTextUnit
+import nerd.tuxmobil.fahrplan.congress.utils.compose.ScrollPosition
+import nerd.tuxmobil.fahrplan.congress.utils.compose.rememberAutoHideOnScrollDown
 
 @Composable
-internal fun SessionDetailsScreen(
+internal fun SessionDetailsContent(
     sessionDetailsState: SessionDetailsState,
-    onViewEvent: (SessionDetailsViewEvent) -> Unit,
     showRoomState: Boolean,
     roomStateMessage: String,
+    showInSidePane: Boolean,
+    onViewEvent: (SessionDetailsViewEvent) -> Unit,
+    onBack: () -> Unit,
 ) {
-    EventFahrplanTheme {
-        Scaffold {
-            val contentAlignment = if (sessionDetailsState is Loading) Alignment.Center else Alignment.TopStart
+    val useVerticalToolbar = useVerticalFloatingToolbar(showInSidePane)
+    val sessionDetailsPaneTitle = stringResource(R.string.session_details_screen_name)
+    Scaffold {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .semantics { paneTitle = sessionDetailsPaneTitle },
+        ) {
+            val scrollState = rememberScrollState()
+            val isLoading = sessionDetailsState is Loading
+            val scrollModifier = Modifier
+                .fillMaxWidth()
+                .then(if (isLoading) Modifier.fillMaxHeight() else Modifier)
+                .verticalScroll(scrollState)
             Box(
-                Modifier
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-                contentAlignment = contentAlignment,
+                scrollModifier,
+                contentAlignment = if (isLoading) Alignment.Center else TopStart,
             ) {
                 when (sessionDetailsState) {
-                    Loading -> Loading()
-                    is Success -> {
-                        val parameter = sessionDetailsState.sessionDetailsParameter as SessionDetails
-                        SessionDetails(parameter, onViewEvent, showRoomState, roomStateMessage)
+                    Loading -> {
+                        NavigationSection(
+                            modifier = Modifier.align(TopStart),
+                            showInSidePane = showInSidePane,
+                            isInDetailsScreen = true,
+                            isAboveHeaderDayDate = false,
+                            onNavClick = onBack,
+                        )
+                        Box(Modifier.windowInsetsPadding(WindowInsets.safeContent.only(Horizontal))) {
+                            Loading()
+                        }
                     }
 
+                    is Success -> {
+                        val session = sessionDetailsState.sessionDetailsParameter as SessionDetails
+                        Column(Modifier.fillMaxWidth()) {
+                            NavigationSectionWithContent(
+                                showInSidePane = showInSidePane,
+                                isInDetailsScreen = true,
+                                isAboveHeaderDayDate = false,
+                                contentLeftOfCloseButton = {
+                                    StartsAtAndRoomName(
+                                        modifier = Modifier.widthIn(max = maxWidth),
+                                        startsAt = session.startsAt,
+                                        roomName = session.roomName,
+                                    )
+
+                                },
+                                contentRightOfBackButton = {
+                                    StartsAtAndRoomName(
+                                        startsAt = session.startsAt,
+                                        roomName = session.roomName,
+                                    )
+                                },
+                                onNavClick = onBack,
+                            )
+                            SessionDetails(
+                                session = session,
+                                showRoomState = showRoomState,
+                                roomStateMessage = roomStateMessage,
+                                useVerticalToolbar = useVerticalToolbar,
+                                onViewEvent = onViewEvent,
+                            )
+                        }
+                    }
                 }
+            }
+            val toolbarActions = remember(sessionDetailsState) {
+                when (sessionDetailsState) {
+                    Loading -> emptyList()
+                    is Success -> sessionDetailsState.toolbarActions
+                }
+            }
+            val showToolbar by rememberAutoHideOnScrollDown(
+                source = ScrollPosition.Scroll(scrollState),
+                enabled = toolbarActions.isNotEmpty() && !useVerticalToolbar,
+            )
+            if (toolbarActions.isNotEmpty()) {
+                SessionDetailsToolbar(
+                    modifier = Modifier
+                        .align(if (useVerticalToolbar) CenterEnd else BottomCenter),
+                    visible = showToolbar,
+                    actions = toolbarActions,
+                    useVerticalToolbar = useVerticalToolbar,
+                    onViewEvent = onViewEvent,
+                )
             }
         }
     }
@@ -121,77 +212,67 @@ fun SessionDetails(
     session: SessionDetails,
     onViewEvent: (SessionDetailsViewEvent) -> Unit,
     showRoomState: Boolean,
-    roomStateMessage: String
+    roomStateMessage: String,
+    useVerticalToolbar: Boolean,
 ) {
     val htmlStyle = HtmlStyle(
         textLinkStyles = textLinkStyles,
     )
 
     SelectionContainer {
-        Column(
-            modifier = Modifier,
-        ) {
-            with(session) {
-                DetailBar(this)
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .safeContentHorizontalAndBottomPadding(),
-                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.session_details_common_space_between_sections)),
-                ) {
-                    RoomState(showRoomState, roomStateMessage)
-                    Title(title, showTitleBoxed)
-                    Subtitle(subtitle)
-                    SpeakerNames(speakerNames, Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_speaker_names)))
-                    Abstract(abstract, htmlStyle)
-                    Description(description, htmlStyle)
-                    Links(links, htmlStyle, Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)))
-                    TrackName(trackName, Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)))
-                    SessionLink(
-                        sessionLink,
-                        htmlStyle,
-                        Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)),
-                        onClick = { onViewEvent(OnSessionLinkClick(it)) },
-                    )
-                }
+        with(session) {
+            Column(
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBars.only(Bottom))
+                    .padding(ToolbarMetrics.screenContentPaddingValues(useVerticalToolbar))
+                    .padding(ScreenMetrics.screenContentPaddingValues())
+                    .windowInsetsPadding(WindowInsets.safeContent.only(Horizontal)),
+                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.session_details_common_space_between_sections)),
+            ) {
+                RoomState(showRoomState, roomStateMessage)
+                Title(title, showTitleBoxed)
+                Subtitle(subtitle)
+                SpeakerNamesAndLanguages(
+                    speakerNamesProperty = speakerNames,
+                    languagesProperty = languages,
+                    modifier = Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_speaker_names)),
+                )
+                Abstract(abstract, htmlStyle)
+                Description(description, htmlStyle)
+                Links(links, htmlStyle, Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)))
+                TrackName(trackName, Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)))
+                SessionLink(
+                    sessionLink,
+                    htmlStyle,
+                    Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)),
+                    onClick = { onViewEvent(OnSessionLinkClick(it)) },
+                )
+                Identifiers(this@with, Modifier.padding(top = dimensionResource(R.dimen.session_details_extra_space_above_section_header)))
             }
         }
     }
 }
 
 @Composable
-private fun DetailBar(
-    sessionDetails: SessionDetails,
+private fun StartsAtAndRoomName(
+    startsAt: SessionDetailsProperty<String>,
+    roomName: SessionDetailsProperty<String>,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
-            .background(EventFahrplanTheme.colorScheme.sessionDetailBarBackground)
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.safeContent.only(Horizontal)),
+            .padding(top = 2.dp), // Horizontal alignment of back arrow + icon + text
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = CenterVertically,
     ) {
         TextLeadingIcon(
-            property = sessionDetails.startsAt,
+            property = startsAt,
+            ellipsizeOverflow = false,
             icon = R.drawable.ic_access_time,
         )
         TextLeadingIcon(
-            property = sessionDetails.roomName,
+            property = roomName,
             icon = R.drawable.ic_room,
-        )
-        Text(
-            modifier = Modifier
-                .weight(1f)
-                .semantics {
-                    contentDescription = sessionDetails.id.contentDescription
-                },
-            text = sessionDetails.id.value.uppercase(),
-            fontSize = dimensionResource(R.dimen.session_detailbar_text).toTextUnit(),
-            color = EventFahrplanTheme.colorScheme.sessionDetailBarText,
-            overflow = Ellipsis,
-            maxLines = 1,
-            textAlign = End,
         )
     }
 }
@@ -199,13 +280,9 @@ private fun DetailBar(
 @Composable
 private fun RoomState(showRoomState: Boolean, roomStateMessage: String) {
     if (showRoomState) {
-        Box(
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .background(
-                    color = EventFahrplanTheme.colorScheme.sessionDetailsRoomStateInfoBackground,
-                    shape = RoundedCornerShape(6.dp),
-                )
+        ButtonBox(
+            modifier = Modifier.padding(bottom = 16.dp),
+            color = EventFahrplanTheme.colorScheme.sessionDetailsRoomStateInfoBackground
         ) {
             Text(
                 modifier = Modifier
@@ -263,17 +340,29 @@ private fun Subtitle(
 }
 
 @Composable
-private fun SpeakerNames(
-    property: SessionDetailsProperty<String>,
+private fun SpeakerNamesAndLanguages(
+    speakerNamesProperty: SessionDetailsProperty<String>,
+    languagesProperty: SessionDetailsProperty<String>,
     modifier: Modifier = Modifier,
 ) {
-    if (property.value.isNotEmpty()) {
+    val text = buildString {
+        if (speakerNamesProperty.value.isNotEmpty()) {
+            append(speakerNamesProperty.value.uppercase())
+        }
+        if (speakerNamesProperty.value.isNotEmpty() && languagesProperty.value.isNotEmpty()) {
+            append(" ")
+        }
+        if (languagesProperty.value.isNotEmpty()) {
+            append("[${languagesProperty.value.uppercase()}]")
+        }
+    }
+    if (text.isNotEmpty()) {
         TextSection(
             modifier = modifier
                 .semantics {
-                    contentDescription = property.contentDescription
+                    contentDescription = "${speakerNamesProperty.contentDescription}, ${languagesProperty.contentDescription}"
                 },
-            text = property.value.uppercase(),
+            text = text,
             fontSize = dimensionResource(R.dimen.session_details_speakers).toTextUnit(),
         )
     }
@@ -507,10 +596,31 @@ private fun SessionLink(
 }
 
 @Composable
+private fun Identifiers(
+    sessionDetails: SessionDetails,
+    modifier: Modifier = Modifier,
+) {
+    val headerText = stringResource(R.string.session_details_section_title_identifiers)
+    Column(modifier = modifier
+        .semantics(mergeDescendants = true) {
+            contentDescription = "$headerText: ${sessionDetails.id.contentDescription}"
+        }
+    ) {
+        TextSectionHeader(
+            text = headerText,
+        )
+        TextSection(
+            text = sessionDetails.id.value.uppercase(),
+        )
+    }
+}
+
+@Composable
 private fun TextLeadingIcon(
     property: SessionDetailsProperty<String>,
     @DrawableRes icon: Int,
     modifier: Modifier = Modifier,
+    ellipsizeOverflow: Boolean = true,
 ) {
     Row(
         modifier = modifier,
@@ -531,7 +641,7 @@ private fun TextLeadingIcon(
             text = property.value.uppercase(),
             fontSize = dimensionResource(R.dimen.session_detailbar_text).toTextUnit(),
             color = EventFahrplanTheme.colorScheme.sessionDetailBarText,
-            overflow = Ellipsis,
+            overflow = if (ellipsizeOverflow) Ellipsis else Visible,
             maxLines = 1,
         )
     }
@@ -642,27 +752,40 @@ private fun getAnnotatedString(
 
 @MultiDevicePreview
 @Composable
-private fun SessionDetailsScreenPreview() {
-    SessionDetailsScreen(
-        sessionDetailsState = Success(
-            SessionDetails(
-                id = SessionDetailsProperty(stringResource(R.string.placeholder_session_id), ""),
-                title = SessionDetailsProperty(stringResource(R.string.placeholder_session_title), ""),
-                subtitle = SessionDetailsProperty(stringResource(R.string.placeholder_session_subtitle), ""),
-                speakerNames = SessionDetailsProperty(stringResource(R.string.placeholder_session_speakers), ""),
-                abstract = SessionDetailsProperty(Markdown(stringResource(R.string.placeholder_session_abstract)), ""),
-                description = SessionDetailsProperty(Markdown(stringResource(R.string.placeholder_session_description)), ""),
-                trackName = SessionDetailsProperty(stringResource(R.string.placeholder_session_track), ""),
-                links = SessionDetailsProperty(stringResource(R.string.placeholder_session_links), ""),
-                startsAt = SessionDetailsProperty(stringResource(R.string.placeholder_session_date), ""),
-                roomName = SessionDetailsProperty(stringResource(R.string.placeholder_session_location), ""),
-                sessionLink = stringResource(R.string.placeholder_session_online),
-            )
-        ),
-        onViewEvent = {},
-        showRoomState = true,
-        roomStateMessage = stringResource(R.string.room_state_text),
-    )
+private fun SessionDetailsContentPreview() {
+    EventFahrplanTheme {
+        SessionDetailsContent(
+            sessionDetailsState = Success(
+                SessionDetails(
+                    id = SessionDetailsProperty(stringResource(R.string.placeholder_session_id), ""),
+                    title = SessionDetailsProperty(stringResource(R.string.placeholder_session_title), ""),
+                    subtitle = SessionDetailsProperty(stringResource(R.string.placeholder_session_subtitle), ""),
+                    speakerNames = SessionDetailsProperty(stringResource(R.string.placeholder_session_speakers), ""),
+                    languages = SessionDetailsProperty(stringResource(R.string.placeholder_session_languages), ""),
+                    abstract = SessionDetailsProperty(Markdown(stringResource(R.string.placeholder_session_abstract)), ""),
+                    description = SessionDetailsProperty(Markdown(stringResource(R.string.placeholder_session_description)), ""),
+                    trackName = SessionDetailsProperty(stringResource(R.string.placeholder_session_track), ""),
+                    links = SessionDetailsProperty(stringResource(R.string.placeholder_session_links), ""),
+                    startsAt = SessionDetailsProperty(stringResource(R.string.placeholder_session_date), ""),
+                    roomName = SessionDetailsProperty(stringResource(R.string.placeholder_session_location), ""),
+                    sessionLink = stringResource(R.string.placeholder_session_online),
+                ),
+                toolbarActions = listOf(
+                    Favorite(false),
+                    Alarm(false),
+                    Feedback,
+                    AddToCalendar,
+                    Share.Direct,
+                    Navigate,
+                ),
+            ),
+            showInSidePane = false,
+            onViewEvent = {},
+            showRoomState = true,
+            roomStateMessage = stringResource(R.string.room_state_text),
+            onBack = {},
+        )
+    }
 }
 
 private const val EXAMPLE_MARKDOWN = """# About
@@ -739,11 +862,15 @@ private fun DescriptionHtmlPreview() {
 
 @Preview
 @Composable
-private fun SessionDetailsScreenLoadingPreview() {
-    SessionDetailsScreen(
-        sessionDetailsState = Loading,
-        onViewEvent = {},
-        showRoomState = false,
-        roomStateMessage = stringResource(R.string.room_state_text),
-    )
+private fun SessionDetailsContentLoadingPreview() {
+    EventFahrplanTheme {
+        SessionDetailsContent(
+            sessionDetailsState = Loading,
+            showInSidePane = false,
+            onViewEvent = {},
+            showRoomState = false,
+            roomStateMessage = stringResource(R.string.room_state_text),
+            onBack = {},
+        )
+    }
 }
