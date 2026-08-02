@@ -153,7 +153,7 @@ android {
             buildConfigField("String", "SCHEDULE_URL", """"https://cfp.winterkongress.ch/wk26/schedule/export/schedule.xml"""")
             buildConfigField("String", "SCHEDULE_FILE_FORMAT", """"schedule_v1_xml"""")
             buildConfigField("boolean", "ENABLE_ALTERNATIVE_SCHEDULE_URL", "true")
-            buildConfigField("String", "EVENT_URL", """"https://winterkongress.ch/2026/talks/%1$s/"""")
+            buildConfigField("String", "EVENT_URL", $$""""https://winterkongress.ch/2026/talks/%1$s/"""")
             buildConfigField("String", "EVENT_WEBSITE_URL", """"https://winterkongress.ch/2026"""")
             buildConfigField("String", "EVENT_POSTAL_ADDRESS", """"Seestrasse 395, 8038 Zürich"""")
             buildConfigField("String", "SERVER_BACKEND_TYPE", """"pretalx-dgwk"""")
