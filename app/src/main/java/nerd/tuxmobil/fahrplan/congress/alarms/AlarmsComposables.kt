@@ -4,15 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides.Companion.Bottom
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -57,6 +51,7 @@ import nerd.tuxmobil.fahrplan.congress.designsystem.texts.TextHeadlineContent
 import nerd.tuxmobil.fahrplan.congress.designsystem.texts.TextOverline
 import nerd.tuxmobil.fahrplan.congress.designsystem.texts.TextSupportingContent
 import nerd.tuxmobil.fahrplan.congress.designsystem.themes.EventFahrplanTheme
+import nerd.tuxmobil.fahrplan.congress.extensions.navigationBarsImeBottomPaddingValues
 import nerd.tuxmobil.fahrplan.congress.extensions.safeContentHorizontalPadding
 import nerd.tuxmobil.fahrplan.congress.utils.compose.ScrollPosition
 import nerd.tuxmobil.fahrplan.congress.utils.compose.rememberAutoHideOnScrollDown
@@ -151,7 +146,7 @@ private fun SessionAlarmsList(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = WindowInsets.navigationBars.union(WindowInsets.ime).only(Bottom).asPaddingValues(),
+            contentPadding = WindowInsets.navigationBarsImeBottomPaddingValues(),
         ) {
             item {
                 NavigationSection(
@@ -160,15 +155,17 @@ private fun SessionAlarmsList(
                     onNavClick = onBack,
                 )
             }
-            itemsIndexed(parameters) { index, item ->
+            itemsIndexed(
+                items = parameters,
+                key = { _, parameter -> parameter.hashCode() },
+            ) { index, item ->
+                val showDivider = index < parameters.size - 1
                 SessionAlarmItem(
                     useVerticalToolbar = useVerticalToolbar,
                     parameter = item,
+                    showDivider = showDivider,
                     onViewEvent = onViewEvent,
                 )
-                if (index < parameters.size - 1) {
-                    DividerHorizontal()
-                }
             }
         }
         AlarmsToolbar(
@@ -210,55 +207,61 @@ private fun NavigationSection(
 private fun SessionAlarmItem(
     useVerticalToolbar: Boolean,
     parameter: SessionAlarmParameter,
+    showDivider: Boolean = true,
     onViewEvent: (AlarmsViewEvent) -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(
-                onClickLabel = stringResource(R.string.alarms_item_on_click_label),
-                onClick = { onViewEvent(OnItemClick(parameter.sessionId)) },
-            )
-            .safeContentHorizontalPadding()
-            .padding(ToolbarMetrics.searchResultItemPaddingValues(useVerticalToolbar)),
-    ) {
-        ListItem(
+    Column {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(ScreenMetrics.listItemPaddingValues()),
-            leadingContent = {
-                AlarmIcon(parameter.alarmOffsetInMin, parameter.alarmOffsetContentDescription)
-            },
-            overlineContent = {
-                TextOverline(
-                    modifier = Modifier.semantics {
-                        contentDescription = parameter.firesAtContentDescription
-                    },
-                    text = parameter.firesAtText,
+                .clickable(
+                    onClickLabel = stringResource(R.string.alarms_item_on_click_label),
+                    onClick = { onViewEvent(OnItemClick(parameter.sessionId)) },
                 )
-            },
-            headlineContent = {
-                TextHeadlineContent(
-                    modifier = Modifier.semantics {
-                        contentDescription = parameter.titleContentDescription
-                    },
-                    text = parameter.title,
-                )
-            },
-            supportingContent = {
-                if (parameter.subtitle.isNotEmpty()) {
-                    TextSupportingContent(
+                .safeContentHorizontalPadding()
+                .padding(ToolbarMetrics.searchResultItemPaddingValues(useVerticalToolbar)),
+        ) {
+            ListItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(ScreenMetrics.listItemPaddingValues()),
+                leadingContent = {
+                    AlarmIcon(parameter.alarmOffsetInMin, parameter.alarmOffsetContentDescription)
+                },
+                overlineContent = {
+                    TextOverline(
                         modifier = Modifier.semantics {
-                            contentDescription = parameter.subtitleContentDescription
+                            contentDescription = parameter.firesAtContentDescription
                         },
-                        text = parameter.subtitle,
+                        text = parameter.firesAtText,
                     )
-                }
-            },
-            trailingContent = {
-                DeleteIcon(parameter, onViewEvent)
-            },
-        )
+                },
+                headlineContent = {
+                    TextHeadlineContent(
+                        modifier = Modifier.semantics {
+                            contentDescription = parameter.titleContentDescription
+                        },
+                        text = parameter.title,
+                    )
+                },
+                supportingContent = {
+                    if (parameter.subtitle.isNotEmpty()) {
+                        TextSupportingContent(
+                            modifier = Modifier.semantics {
+                                contentDescription = parameter.subtitleContentDescription
+                            },
+                            text = parameter.subtitle,
+                        )
+                    }
+                },
+                trailingContent = {
+                    DeleteIcon(parameter, onViewEvent)
+                },
+            )
+        }
+        if (showDivider) {
+            DividerHorizontal()
+        }
     }
 }
 

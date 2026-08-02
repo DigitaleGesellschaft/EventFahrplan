@@ -152,14 +152,14 @@ Contributions from 0x5ubt13, Adriano Pereira Junior, Akarsh Seggemu,
 Александр Рознятовский, aligoush, Andrea Marziali, Andreas Wirth, Andrulko, Andy Scherzinger,
 Andreas Schildbach, Animesh Verma, bashtian, bjoernb, Björn Olsson Jarl,
 burned42, ButterflyOfFire, cacarrara, Caio Volpato, Chase, cketti, codingcatgirl,
-Dominik Stadler, e4ch, entropynil, erebion, ideadapt, isi_ko404, IsoLinearCHiP,
+Dominik Stadler, e4ch, entropynil, erebion, ideadapt, isi_ko404, IsoLinearCHiP, Italo Vignoli,
 Jasper van der Graaf, Joergi, Julius Vitkauskas, koelnkalkverbot, kpc21, Larissa Yasin,
 lepawa, ligi, lucadelu, Luis Azcuaga, María Arias de Reyna, Mateus Baptista,
 Matthias Geisler, Matthias Hunstock, Matthias Mair, MichaelRocks, Miguel Beltran,
 mtpa, Muha Aliss, nautilusx, Nghiem Xuan Hien, NiciDieNase, Noemis, NWuensche, Oguz Yuksel,
-Omicron, ozgurbaykal, Poschi, Qwertele, Róbert Papp, Robin Janssens, rotrot, Sjors van Mierlo,
-Smarzaro, Stefan Medack, SubOptimal, Su Jade, taseret, tct123, Teeranai.P, Torsten Grote,
-Victor Herasme, Vladimir Alabov, Yanicka, zadintuvas
+Omicron, ozgurbaykal, Poschi, Qwertele, Róbert Papp, Robin Janssens, rotrot, Sebastian Zabel,
+Sjors van Mierlo, Smarzaro, Stefan Medack, SubOptimal, Su Jade, taseret, tct123, Teeranai.P,
+Torsten Grote, Victor Herasme, Vladimir Alabov, Yanicka, zadintuvas
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
